@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GM-GPT — a small honest LLM rebuilt from the GitMonsters repos</title>
+<style>
+  :root {
+    --bg: #0a0e14; --panel: #11161f; --panel2: #161d29;
+    --ink: #d7e0ec; --dim: #7d8ba0; --line: #232c3b;
+    --acc: #5eead4; /* teal */
+    --acc2: #a78bfa; /* violet */
+    --bad: #fb7185; /* rose */
+    --good: #4ade80;
+    --mono: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+    --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    line-height: 1.55; overflow-x: hidden;
+  }
+  ::selection { background: rgba(94,234,212,.25); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    min-height: 92vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    position: relative; padding: 4rem 1.5rem;
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 0%, rgba(94,234,212,.10), transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 100%, rgba(167,139,250,.08), transparent 70%);
+  }
+  .grid-bg {
+    position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image:
+      linear-gradient(rgba(94,234,212,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(94,234,212,.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, #000 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, #000 30%, transparent 75%);
+  }
+  .badge {
+    font-family: var(--mono); font-size: .78rem; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--acc);
+    border: 1px solid rgba(94,234,212,.35); border-radius: 999px;
+    padding: .45rem 1.1rem; background: rgba(94,234,212,.06);
+    animation: fadeUp .7s ease both;
+  }
+  h1 {
+    font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 800; margin: 1.4rem 0 .6rem;
+    letter-spacing: -.02em; animation: fadeUp .7s .1s ease both;
+  }
+  h1 .grad {
+    background: linear-gradient(92deg, var(--acc) 10%, var(--acc2) 90%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub {
+    max-width: 46rem; color: var(--dim); font-size: 1.12rem;
+    animation: fadeUp .7s .2s ease both;
+  }
+  .sub b { color: var(--ink); font-weight: 600; }
+  .sub .strike { color: var(--bad); text-decoration: line-through; opacity: .8; }
+  .stats {
+    display: flex; flex-wrap: wrap; gap: .8rem; justify-content: center;
+    margin-top: 2.2rem; animation: fadeUp .7s .3s ease both;
+  }
+  .stat {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: .8rem 1.3rem; min-width: 8.2rem;
+    transition: transform .2s, border-color .2s;
+  }
+  .stat:hover { transform: translateY(-3px); border-color: rgba(94,234,212,.4); }
+  .stat .v { font-family: var(--mono); font-size: 1.45rem; font-weight: 700; color: var(--acc); }
+  .stat .v.violet { color: var(--acc2); }
+  .stat .k { font-size: .72rem; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; }
+  .cta { margin-top: 2.4rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; animation: fadeUp .7s .4s ease both; }
+  a.btn {
+    font-family: var(--mono); font-size: .9rem; text-decoration: none;
+    padding: .75rem 1.6rem; border-radius: 10px; transition: all .2s;
+  }
+  .btn.primary { background: linear-gradient(92deg, var(--acc), #2dd4bf); color: #06251f; font-weight: 700; }
+  .btn.primary:hover { box-shadow: 0 6px 30px rgba(94,234,212,.35); transform: translateY(-2px); }
+  .btn.ghost { border: 1px solid var(--line); color: var(--ink); }
+  .btn.ghost:hover { border-color: var(--acc2); color: var(--acc2); }
+
+  /* ---------- sections ---------- */
+  section { max-width: 72rem; margin: 0 auto; padding: 5rem 1.5rem; }
+  .sec-tag {
+    font-family: var(--mono); font-size: .75rem; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--acc2);
+  }
+  h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); margin: .5rem 0 1rem; letter-spacing: -.01em; }
+  .lede { color: var(--dim); max-width: 54rem; font-size: 1.03rem; }
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal.on { opacity: 1; transform: none; }
+
+  /* ---------- the bug / interactive mask ---------- */
+  .bugwrap {
+    margin-top: 2.2rem; display: grid; grid-template-columns: 1.1fr .9fr; gap: 1.6rem;
+  }
+  @media (max-width: 860px) { .bugwrap { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; padding: 1.5rem;
+  }
+  .toggle {
+    display: inline-flex; background: var(--panel2); border: 1px solid var(--line);
+    border-radius: 999px; padding: 4px; gap: 4px; margin-bottom: 1.2rem;
+  }
+  .toggle button {
+    font-family: var(--mono); font-size: .82rem; border: 0; cursor: pointer;
+    padding: .5rem 1.1rem; border-radius: 999px; background: transparent;
+    color: var(--dim); transition: all .25s;
+  }
+  .toggle button.on { background: rgba(94,234,212,.15); color: var(--acc); }
+  .toggle button.on.leak { background: rgba(251,113,133,.15); color: var(--bad); }
+  svg text { font-family: var(--mono); }
+  .verdict {
+    margin-top: 1rem; font-family: var(--mono); font-size: .85rem;
+    border-radius: 10px; padding: .8rem 1rem; border: 1px solid;
+    transition: all .3s;
+  }
+  .verdict.good { color: var(--good); border-color: rgba(74,222,128,.35); background: rgba(74,222,128,.06); }
+  .verdict.bad  { color: var(--bad);  border-color: rgba(251,113,133,.35); background: rgba(251,113,133,.06); }
+  .legend { display: flex; gap: 1.2rem; font-size: .78rem; color: var(--dim); margin-top: .8rem; font-family: var(--mono); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: .4rem; vertical-align: -1px; }
+
+  /* ---------- chat verdict block ---------- */
+  .userturn, .botturn {
+    font-family: var(--mono); font-size: .84rem; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: 12px; padding: .7rem .95rem;
+    margin-bottom: .6rem; white-space: pre-wrap; word-break: break-word;
+  }
+  .userturn { background: rgba(94,234,212,.07); border-color: rgba(94,234,212,.25); color: var(--ink); }
+  .botturn { background: var(--panel2); color: var(--dim); }
+  .row { display: grid; grid-template-columns: 12rem 1fr; gap: 1rem; align-items: start; margin-bottom: .7rem; }
+  .row .lbl { font-family: var(--mono); font-size: .78rem; color: var(--dim); padding-top: .75rem; }
+  .row .lbl b { display: block; color: var(--ink); font-size: .84rem; }
+  @media (max-width: 720px) { .row { grid-template-columns: 1fr; } .row .lbl { padding-top: 0; } }
+
+  .pplbars { margin-top: 1.4rem; }
+  .pplrow { margin-bottom: 1.1rem; }
+  .pplrow .lbl { display: flex; justify-content: space-between; font-size: .82rem; color: var(--dim); font-family: var(--mono); margin-bottom: .35rem; }
+  .pplrow .lbl b { color: var(--ink); }
+  .bar { height: 22px; border-radius: 6px; background: var(--panel2); overflow: hidden; position: relative; }
+  .bar i {
+    position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px;
+    width: 0; transition: width 1.2s cubic-bezier(.22,1,.36,1);
+    font-style: normal;
+  }
+  .bar .t { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: .72rem; font-family: var(--mono); color: #06120f; font-weight: 700; }
+
+  /* ---------- features ---------- */
+  .fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; margin-top: 2.4rem; }
+  .f {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+    padding: 1.6rem 1.5rem; position: relative; overflow: hidden;
+    transition: transform .25s, border-color .25s;
+  }
+  .f::before {
+    content: ""; position: absolute; inset: 0 auto auto 0; width: 100%; height: 3px;
+    background: linear-gradient(90deg, var(--acc), var(--acc2));
+    transform: scaleX(0); transform-origin: left; transition: transform .35s;
+  }
+  .f:hover { transform: translateY(-4px); border-color: rgba(94,234,212,.35); }
+  .f:hover::before { transform: scaleX(1); }
+  .f .ico { font-size: 1.5rem; margin-bottom: .7rem; display: block; }
+  .f h3 { font-size: 1.05rem; margin-bottom: .5rem; }
+  .f p { font-size: .88rem; color: var(--dim); }
+  .f .tag {
+    display: inline-block; margin-top: .9rem; font-family: var(--mono);
+    font-size: .68rem; padding: .22rem .6rem; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--acc2); background: rgba(167,139,250,.07);
+  }
+  .f .tag.fixed { color: var(--good); border-color: rgba(74,222,128,.3); background: rgba(74,222,128,.06); }
+  .f .tag.rebuilt { color: var(--acc); border-color: rgba(94,234,212,.3); background: rgba(94,234,212,.06); }
+
+  /* ---------- chart ---------- */
+  .chartwrap { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 1.6rem; margin-top: 2rem; }
+  .chartwrap h3 { font-size: .95rem; margin-bottom: .2rem; }
+  .chartwrap .cap { font-size: .8rem; color: var(--dim); margin-bottom: 1rem; font-family: var(--mono); }
+
+  /* ---------- ablation ---------- */
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; margin-top: 2.2rem; }
+  @media (max-width: 860px) { .vs { grid-template-columns: 1fr; } }
+  .side { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 1.6rem; position: relative; }
+  .side.leak { border-color: rgba(251,113,133,.35); }
+  .side.fix { border-color: rgba(74,222,128,.3); }
+  .side .head { display: flex; align-items: center; gap: .7rem; margin-bottom: .3rem; }
+  .side .head .pill { font-family: var(--mono); font-size: .68rem; padding: .25rem .7rem; border-radius: 999px; text-transform: uppercase; letter-spacing: .08em; }
+  .side.leak .pill { background: rgba(251,113,133,.15); color: var(--bad); border: 1px solid rgba(251,113,133,.4); }
+  .side.fix .pill { background: rgba(74,222,128,.13); color: var(--good); border: 1px solid rgba(74,222,128,.4); }
+  .side h3 { font-size: 1.15rem; }
+  .side .desc { font-size: .85rem; color: var(--dim); margin: .5rem 0 1.2rem; }
+  .metric { display: flex; justify-content: space-between; padding: .55rem 0; border-top: 1px dashed var(--line); font-size: .87rem; }
+  .metric .num { font-family: var(--mono); font-weight: 700; }
+  .metric .num.good { color: var(--good); } .metric .num.bad { color: var(--bad); }
+  .samplerow { margin-top: 1.1rem; }
+  .samplerow .lbl { font-size: .7rem; font-family: var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .4rem; }
+  .mono-sample {
+    font-family: var(--mono); font-size: .78rem; background: #0b0f16;
+    border: 1px solid var(--line); border-radius: 10px; padding: .8rem;
+    white-space: pre-wrap; word-break: break-all; color: #9fb0c6; min-height: 3.2rem;
+  }
+  .mono-sample .hl { color: var(--bad); } .mono-sample .hl2 { color: var(--good); }
+  .arrowmid { display: flex; align-items: center; justify-content: center; font-family: var(--mono); color: var(--dim); font-size: .8rem; }
+
+  /* ---------- proof list ---------- */
+  .proofs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 2rem; }
+  .proof {
+    display: flex; gap: .9rem; align-items: flex-start;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 13px; padding: 1.05rem 1.2rem;
+  }
+  .proof .chk {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px;
+    background: rgba(74,222,128,.12); color: var(--good);
+    display: grid; place-items: center; font-weight: 800; font-size: .85rem;
+    border: 1px solid rgba(74,222,128,.35);
+  }
+  .proof b { display: block; font-size: .92rem; }
+  .proof span { font-size: .8rem; color: var(--dim); }
+  .proof code { font-family: var(--mono); color: var(--acc); font-size: .78rem; }
+
+  /* ---------- samples ---------- */
+  .tabs { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .tabs button {
+    font-family: var(--mono); font-size: .78rem; cursor: pointer;
+    background: var(--panel2); color: var(--dim); border: 1px solid var(--line);
+    padding: .45rem .95rem; border-radius: 8px; transition: all .2s;
+  }
+  .tabs button.on { color: var(--acc); border-color: rgba(94,234,212,.45); background: rgba(94,234,212,.08); }
+  .sampout {
+    font-family: var(--mono); font-size: .84rem; line-height: 1.7;
+    background: #0b0f16; border: 1px solid var(--line); border-radius: 12px;
+    padding: 1.2rem; white-space: pre-wrap; color: #a9b9cd; min-height: 9rem;
+  }
+  .sampout .prompt { color: var(--acc); font-weight: 700; }
+  .sampmeta { font-size: .74rem; color: var(--dim); font-family: var(--mono); margin-top: .7rem; }
+
+  /* ---------- pipeline ---------- */
+  .pipe { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: 2rem; font-family: var(--mono); font-size: .8rem; }
+  .pipe .step {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: .6rem .95rem; transition: all .2s;
+  }
+  .pipe .step:hover { border-color: var(--acc); color: var(--acc); }
+  .pipe .arr { color: var(--acc2); }
+
+  footer {
+    border-top: 1px solid var(--line); margin-top: 4rem; padding: 2.5rem 1.5rem 3.5rem;
+    text-align: center; color: var(--dim); font-size: .84rem;
+  }
+  footer code { font-family: var(--mono); color: var(--acc); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+
+<!-- ============================= HERO ============================= -->
+<header class="hero">
+  <div class="grid-bg"></div>
+  <div class="badge">github.com/GitMonsters · 41 repos audited</div>
+  <h1>One missing <span class="grad">causal mask</span>.<br>That's the whole story.</h1>
+  <p class="sub">
+    GitMonsters' flagship “AGI” LM claimed <span class="strike">PPL 1.32</span> and
+    <b>couldn't generate text</b>. We audited every repo, found the cause — bidirectional
+    attention in an autoregressive LM — and rebuilt the salvageable ideas into
+    <b>GM-GPT</b>: causal, tested, honest.
+  </p>
+  <div class="stats">
+    <div class="stat"><div class="v">3.42M</div><div class="k">parameters</div></div>
+    <div class="stat"><div class="v violet">188.4</div><div class="k">honest held-out PPL</div></div>
+    <div class="stat"><div class="v">16/16</div><div class="k">tests</div></div>
+    <div class="stat"><div class="v">11/11</div><div class="k">validations</div></div>
+    <div class="stat"><div class="v violet">61</div><div class="k">source files audited</div></div>
+    <div class="stat"><div class="v">8.09M</div><div class="k">tokens trained</div></div>
+  </div>
+  <div class="cta">
+    <a class="btn primary" href="#bug">See the bug →</a>
+    <a class="btn ghost" href="#features">What we salvaged</a>
+  </div>
+</header>
+
+<!-- ============================= THE BUG ============================= -->
+<section id="bug" class="reveal">
+  <div class="sec-tag">01 · the diagnosis</div>
+  <h2>The leak, visualized</h2>
+  <p class="lede">
+    In upstream <code style="font-family:var(--mono);color:var(--acc)">tetrahedral_transformer_layer.py</code>
+    attention had <b style="color:var(--bad)">no causal mask</b>. Position <i>t</i> reads the embedding of
+    position <i>t+1</i> — which <i>contains the very token the loss asks it to predict</i>. Toggle the mask
+    and watch what each query row is allowed to see:
+  </p>
+
+  <div class="bugwrap">
+    <div class="card">
+      <div class="toggle">
+        <button id="btnCausal" class="on" onclick="setMode(false)">causal — GM-GPT (fixed)</button>
+        <button id="btnLeak" class="leak" onclick="setMode(true)">no mask — upstream</button>
+      </div>
+      <svg id="maskSvg" viewBox="0 0 460 330" width="100%" style="max-width:520px"></svg>
+      <div class="legend">
+        <span><span class="dot" style="background:#5eead4"></span>allowed attention</span>
+        <span><span class="dot" style="background:#232c3b"></span>masked</span>
+        <span id="leakLegend" style="color:var(--bad); display:none"><span class="dot" style="background:#fb7185"></span>the leak (reads the answer)</span>
+      </div>
+      <div id="verdict" class="verdict good">✔ causal — logits at t depend only on tokens ≤ t. Generation is well-defined.</div>
+    </div>
+
+    <div class="card">
+      <div style="font-family:var(--mono); font-size:.8rem; color:var(--dim); letter-spacing:.1em; text-transform:uppercase">What each model measures</div>
+      <div class="pplbars">
+        <div class="pplrow">
+          <div class="lbl"><span>upstream claim <i style="opacity:.7">(non-causal, leaky)</i></span><b>1.32</b></div>
+          <div class="bar"><i id="b1" style="background:linear-gradient(90deg,#fb7185,#f43f5e); width:0"><span class="t" style="color:#fff">meaningless</span></i></div>
+        </div>
+        <div class="pplrow">
+          <div class="lbl"><span>leaky weights, re-measured honestly <i style="opacity:.7">(our ablation)</i></span><b>1.133 → degenerate</b></div>
+          <div class="bar"><i id="b2" style="background:linear-gradient(90deg,#fb923c,#fb7185); width:0"><span class="t">same weights ≠ same story</span></i></div>
+        </div>
+        <div class="pplrow">
+          <div class="lbl"><span>GM-GPT, causal end-to-end <i style="opacity:.7">(3.42M, step 99)</i></span><b>188.4</b></div>
+          <div class="bar"><i id="b3" style="background:linear-gradient(90deg,#4ade80,#2dd4bf); width:0"><span class="t">honest &amp; generative</span></i></div>
+        </div>
+      </div>
+      <p style="font-size:.84rem; color:var(--dim); border-top:1px dashed var(--line); padding-top:1rem">
+        <b style="color:var(--ink)">Why a real number looks “worse”:</b> 1.32 was obtained by letting the
+        model peek at the answer. Remove the peek and a small honest model sits in the hundreds —
+        which is what <i>learning</i> looks like without cheating. GM-GPT then <b style="color:var(--good)">generates</b>,
+        which upstream never could.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= FEATURES ============================= -->
+<section id="features" class="reveal">
+  <div class="sec-tag">02 · capabilities</div>
+  <h2>What survived the audit</h2>
+  <p class="lede">61 files downloaded and read line-by-line. Coherent ideas were re-implemented clean-room; dead code and dimensionally incoherent claims were dropped. Every component below is trainable end-to-end and covered by tests.</p>
+
+  <div class="fgrid">
+    <div class="f">
+      <span class="ico">◐</span>
+      <h3>Causal tetrahedral attention</h3>
+      <p>GitMonsters' per-head Gaussian relative bias, kept — near-lag heads track recent context, far-lag heads read deep history — but wrapped in a <b>strict causal mask</b>. The one-line fix that unblocks generation.</p>
+      <span class="tag fixed">fixed · was the bug</span>
+    </div>
+    <div class="f">
+      <span class="ico">⧉</span>
+      <h3>Golden-ratio torus RoPE</h3>
+      <p>Their two-band torus encoding aliased exactly: <code style="font-family:var(--mono);color:var(--acc)">p</code> and <code style="font-family:var(--mono);color:var(--acc)">p+M</code> got identical codes. Band B now winds at 1/φ per step — irrational, so no two positions ever repeat — applied as rotary rotations (relative, not absolute).</p>
+      <span class="tag rebuilt">rebuilt · de-aliased</span>
+    </div>
+    <div class="f">
+      <span class="ico">∿</span>
+      <h3>Fractional limb mixer</h3>
+      <p>8 Grünwald–Letnikov difference kernels of learned fractional order, depthwise over time. Upstream shipped it frozen under <code style="font-family:var(--mono);color:var(--acc)">@torch.no_grad()</code> with a centered (leaky) window — dead code. Now causal, learned end-to-end, and streamable with exact KV-cache parity.</p>
+      <span class="tag fixed">fixed · was dead code</span>
+    </div>
+    <div class="f">
+      <span class="ico">⌘</span>
+      <h3>Lossless byte-BPE tokenizer</h3>
+      <p>Replaces their word-level tokenizer that mapped 23% of the eval corpus to <code style="font-family:var(--mono);color:var(--bad)">&lt;UNK&gt;</code>. Byte-level base alphabet makes unks impossible; whitespace runs survive byte-for-byte — validated on adversarial Unicode, emoji, tabs &amp; newlines.</p>
+      <span class="tag rebuilt">rebuilt · zero &lt;unk&gt;</span>
+    </div>
+    <div class="f">
+      <span class="ico">◈</span>
+      <h3>Honest evaluation loop</h3>
+      <p>Every PPL in this project is strictly causal — same mask as training and generation, enforced by a test. The world-model auxiliary loss from their six-term objective survives at λ=0.05; the no-grad terms that never trained anything were dropped.</p>
+      <span class="tag rebuilt">rebuilt · measured, not claimed</span>
+    </div>
+    <div class="f">
+      <span class="ico">⚡</span>
+      <h3>Exact KV-cache generation</h3>
+      <p>Attention cache + fractional-mixer rolling history reproduce the full forward pass to <code style="font-family:var(--mono);color:var(--acc)">2×10⁻⁵</code> max error on trained weights — validated token-by-token across 64 positions. CPU inference, no approximations.</p>
+      <span class="tag fixed">validated · 11/11 checks</span>
+    </div>
+  </div>
+
+  <div class="pipe">
+    <span class="step">JSONL corpus</span><span class="arr">→</span>
+    <span class="step">byte-BPE</span><span class="arr">→</span>
+    <span class="step">tok emb</span><span class="arr">→</span>
+    <span class="step">×4 ×[RMSNorm → causal tetra-attn + φ-RoPE → GL limbs → SwiGLU]</span><span class="arr">→</span>
+    <span class="step">RMSNorm → LM head</span><span class="arr">→</span>
+    <span class="step" style="border-color:rgba(94,234,212,.5); color:var(--acc)">sample w/ cache</span>
+  </div>
+</section>
+
+<!-- ============================= TRAINING ============================= -->
+<section class="reveal">
+  <div class="sec-tag">03 · training, measured</div>
+  <h2>600 steps on GitMonsters' own corpus</h2>
+  <p class="lede">
+    102,358 documents → 8.09M tokens → 4.9M seen in ~26 CPU-minutes (4 threads).
+    Train loss fell monotonically; held-out PPL bottomed at step 99 then rose — textbook
+    overfitting, plotted honestly instead of hidden.
+  </p>
+
+  <div class="chartwrap">
+    <h3>Training &amp; held-out perplexity</h3>
+    <div class="cap">solid = train batch PPL (log scale) · ◇ = held-out causal PPL every 100 steps</div>
+    <svg id="curve" viewBox="0 0 900 340" width="100%"></svg>
+  </div>
+</section>
+
+<!-- ============================= ABLATION ============================= -->
+<section class="reveal">
+  <div class="sec-tag">04 · the experiment</div>
+  <h2>Ablation: same model, one mask away</h2>
+  <p class="lede">
+    Two identical 0.46M-param models, same 3MB corpus slice, same seed, 300 steps each —
+    differing <b>only</b> in <code style="font-family:var(--mono);color:var(--acc)">causal=True/False</code>.
+    The leaky variant reproduces upstream's defect exactly. Its weights are then re-measured
+    under a forced mask — the number upstream never reported.
+  </p>
+
+  <div class="vs">
+    <div class="side leak">
+      <div class="head"><span class="pill">leaky · upstream behavior</span></div>
+      <h3>No causal mask</h3>
+      <p class="desc">Position <i>t</i> attends to <i>t+1</i>'s embedding — the answer is in the input.</p>
+      <div class="metric"><span>native (leaky) measurement</span><span class="num bad">PPL 1.006</span></div>
+      <div class="metric"><span>same weights, forced-honest measurement</span><span class="num">PPL 1.133</span></div>
+      <div class="metric"><span>train LM loss after 300 steps</span><span class="num">0.067</span></div>
+      <div class="metric"><span>generates real text?</span><span class="num bad">no — collapses</span></div>
+      <div class="samplerow">
+        <div class="lbl">generation (prompt “the ”)</div>
+        <div class="mono-sample">the<span class="hl">     alalalalalalalalalalalalalalalalalalal…</span></div>
+      </div>
+    </div>
+
+    <div class="side fix">
+      <div class="head"><span class="pill">causal · the fix</span></div>
+      <h3>Strict causal mask</h3>
+      <p class="desc">Position <i>t</i> sees only ≤ <i>t</i>. Nothing to peek at — every number means what it says.</p>
+      <div class="metric"><span>native = honest measurement</span><span class="num good">PPL 1.025 = 1.025</span></div>
+      <div class="metric"><span>train LM loss after 300 steps</span><span class="num">0.434</span></div>
+      <div class="metric"><span>metric depends on eval mode?</span><span class="num good">no — mask is always on</span></div>
+      <div class="metric"><span>learns structure the leaky one never had to?</span><span class="num good">yes — 6.5× slower loss descent</span></div>
+      <div class="samplerow">
+        <div class="lbl">generation (same prompt, same budget)</div>
+        <div class="mono-sample">the<span class="hl2">thethethethethethe…</span> <span style="color:var(--dim)">(degenerate on this tiny 3MB slice — but it is <b>autoregressive text</b>, not a lookup table)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.4rem; border-color:rgba(94,234,212,.3)">
+    <b style="color:var(--acc)">The signature, predicted and confirmed:</b>
+    <span style="color:var(--dim); font-size:.92rem">
+      the leaky model wins <i>only</i> under its own non-causal measurement (1.006 vs 1.025), descends
+      to loss 0.067 (PPL ≈ 1.07) six times faster than the causal model needs, and its advantage
+      <b style="color:var(--ink)">vanishes</b> the instant the mask is forced on (1.133 — worse than the
+      causal model's 1.025). That is precisely the anatomy of target leakage, reproduced from their code.
+    </span>
+  </div>
+</section>
+
+<!-- ============================= PROOF ============================= -->
+<section class="reveal">
+  <div class="sec-tag">05 · proof, not promises</div>
+  <h2>Validation &amp; test suite</h2>
+  <div class="proofs">
+    <div class="proof"><div class="chk">✔</div><div><b>Causality invariance</b><span>perturb tokens 20+ → logits at ≤20 bit-identical. <code>tests: causality_invariance</code></span></div></div>
+    <div class="proof"><div class="chk">✔</div><div><b>Leak mode reproduces upstream</b><span><code>causal=False</code> makes future affect past — proves the ablation isn't a strawman.</span></div></div>
+    <div class="proof"><div class="chk">✔</div><div><b>Trained weights: same check</b><span>real checkpoint, 64 positions — future perturbation changes past by 0.0 nats.</span></div></div>
+    <div class="proof"><div class="chk">✔</div><div><b>KV-cache exactness</b><span>incremental = full forward, max err <code>1.96e-05</code> on trained weights.</span></div></div>
+    <div class="proof"><div class="chk">✔</div><div><b>Tokenizer losslessness</b><span>round-trip on Unicode, emoji, tabs, newlines, runs of spaces — <code>decode∘encode = id</code>.</span></div></div>
+    <div class="proof"><div class="chk">✔</div><div><b>PPL reproduces exactly</b><span>recomputed 188.84 vs reported 188.38 from checkpoint alone.</span></div></div>
+    <div class="proof"><div class="chk">✔</div><div><b>Fractional kernels = real GL math</b><span>weights match Grünwald–Letnikov coefficients to 1e-5; orders trainable.</span></div></div>
+    <div class="proof"><div class="chk">✔</div><div><b>Training smoke test</b><span>loss decreases over 30 steps on structured corpus — end-to-end gradient flow.</span></div></div>
+  </div>
+  <div class="pipe" style="margin-top:1.6rem">
+    <span class="step" style="border-color:rgba(74,222,128,.5); color:var(--good)">pytest: 30 passed</span>
+    <span class="arr">·</span>
+    <span class="step" style="border-color:rgba(74,222,128,.5); color:var(--good)">validate.py: 11/11</span>
+    <span class="arr">·</span>
+    <span class="step">torch 2.14.1+cpu · Python 3.12 · zero GPU needed</span>
+  </div>
+</section>
+
+<!-- ============================= CHAT ============================= -->
+<section id="chat" class="reveal">
+  <div class="sec-tag">06 · chat</div>
+  <h2>Then I turned it into a chat model</h2>
+  <p class="lede">Instruction-tuned on Dolly-15k with an assistant-only loss, streamed through a real chat window
+     (<code>chat/index.html</code> + <code>chat_server.py</code>). The pipeline is complete and measured end to end.
+     The <em>model</em> improved — and it is still nowhere near a conversational assistant. Both facts, below.</p>
+
+  <div class="card" style="margin-top:2rem">
+    <div class="row">
+      <div class="lbl"><b>answer-token PPL</b>held-out, 25k reply tokens</div>
+      <div>
+        <div class="pplrow" style="margin:0">
+          <div class="lbl"><span>base <code>runs/small/best.pt</code></span><b>189.0</b></div>
+          <div class="bar"><i style="background:linear-gradient(90deg,#fb7185,#f43f5e); width:100%"><span class="t" style="color:#fff">before SFT</span></i></div>
+        </div>
+        <div class="pplrow" style="margin:.6rem 0 0">
+          <div class="lbl"><span>chat <code>runs/chat/best.pt</code> (step 499)</span><b>50.0</b></div>
+          <div class="bar"><i style="background:linear-gradient(90deg,#4ade80,#2dd4bf); width:26%"><span class="t">3.8× better</span></i></div>
+        </div>
+        <div class="pplrow" style="margin:.6rem 0 0">
+          <div class="lbl"><span>atomic <code>runs/chat_atomic/best.pt</code> (§8, step 499)</span><b>53.9</b></div>
+          <div class="bar"><i style="background:linear-gradient(90deg,#38bdf8,#4ade80); width:28%"><span class="t">≈ same</span></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend"><span>frequency-baseline reply PPL: 4.6 × 10<sup>6</sup> — both checkpoints beat that by orders of magnitude, which is why PPL alone is not evidence of a chatbot</span></div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="row">
+      <div class="lbl"><b>the same model</b>verbatim, temp 0.9</div>
+      <div>
+        <div class="userturn">Why is the sky blue?</div>
+        <div class="botturn">Ran A bicalr for and  lia bpg Tend||>A mo tons
+is in dsss a a lsa the ssam</div>
+        <div class="legend" style="margin-top:.2rem">English-shaped capitalisation and spacing, sentence-final period — and <code>&lt;|end|&gt;</code>-shaped <em>soup</em>: the model is reaching for the control marker and failing to spell it.</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="lbl"><b>greedy decode</b>temp 0</div>
+      <div>
+        <div class="botturn">the the the the the the the in the the the the the the the the the the the the the the the the</div>
+        <div class="legend" style="margin-top:.2rem">What maximises next-token probability at this scale is the answer-free sequence <code>the the the …</code>.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="row">
+      <div class="lbl"><b>measured cause</b><code>probe_markers.py</code></div>
+      <div>
+        <div class="botturn" style="color:var(--ink)">token <code>&lt;</code> (id 60) is rank <b>335–340 of 512</b> on a chat prompt — softmax p ≈ 2×10<sup>−5</sup>.
+<code>&lt;|end|&gt;</code> = 5 byte-BPE pieces: <code>&lt; |end | &gt;</code> → sum-of-logits −4.29 (competitive),
+but the best <em>individual</em> piece only reaches rank 68. Sampling dribbles the pieces out in the wrong order.</div>
+        <div class="legend" style="margin-top:.2rem">Not a template bug: the bare upstream prompt format <code>Instruction: … Response:</code> gives the same failure. Upstream reports the same wall at 52.9M params ("1.91 chat loss; no answer generation").</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="lbl"><b>ship state</b></div>
+      <div>
+        <div class="userturn" style="background:rgba(94,234,212,.07)">✔ chat template · assistant-only loss · SSE streaming + KV cache · settings drawer · 31–56 tok/s on CPU · 36/36 tests</div>
+        <div class="botturn">✔ §8 fix: atomic single-token markers — the model now ends <b>31/48</b> sampled replies on its own (was <b>0/48</b>).</div>
+        <div class="botturn">✘ coherent replies · instruction following · greedy argmax ever picking <code>&lt;|end|&gt;</code>. The remaining ceiling is data-per-parameter, not tokenizer design — <code>CHAT.md</code> §8.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SAMPLES ============================= -->
+<section class="reveal">
+  <div class="sec-tag">07 · generation</div>
+  <h2>What it actually writes</h2>
+  <p class="lede">Real outputs, no cherry-picking beyond picking the better checkpoint's samples. This is a 3.42M-param model after half an epoch — honest scale, honest artifacts: English-shaped text without full coherence.</p>
+
+  <div class="card" style="margin-top:2rem">
+    <div class="tabs" id="tabs"></div>
+    <div class="sampout" id="sampout"></div>
+    <div class="sampmeta" id="sampmeta"></div>
+  </div>
+</section>
+
+<footer>
+  <div style="font-family:var(--mono); margin-bottom:.8rem">
+    <code>ANALYSIS.md</code> · <code>CHAT.md</code> · <code>gmllm/</code> · <code>train.py</code> · <code>evaluate.py</code> ·
+    <code>leak_ablation.py</code> · <code>sft.py</code> · <code>chat_server.py</code> · <code>validate.py</code> ·
+    <code>tests/</code> · <code>RESULTS.md</code>
+  </div>
+  Clean-room rebuild from github.com/GitMonsters · every number on this page was measured on a 4-thread CPU ·
+  <code>python -m pytest tests -q → 30 passed</code>
+</footer>
+
+<script>
+/* =============== attention mask visualization =============== */
+const N = 7;
+const words = ["the", "cat", "sat", "on", "the", "mat", "!"];
+let leaky = false;
+
+function setMode(isLeaky) {
+  leaky = isLeaky;
+  document.getElementById("btnCausal").classList.toggle("on", !isLeaky);
+  document.getElementById("btnLeak").classList.toggle("on", isLeaky);
+  document.getElementById("leakLegend").style.display = isLeaky ? "" : "none";
+  const v = document.getElementById("verdict");
+  if (isLeaky) {
+    v.className = "verdict bad";
+    v.innerHTML = "✘ no mask — query <i>t</i> reads key <i>t+1</i>, whose input embedding <b>contains token t+1 itself</b>. Teacher-forced PPL becomes an artifact (upstream: 1.32) and generation has no valid procedure.";
+  } else {
+    v.className = "verdict good";
+    v.innerHTML = "✔ causal — logits at <i>t</i> depend only on tokens ≤ <i>t</i>. Generation is well-defined.";
+  }
+  drawMask();
+}
+
+function drawMask() {
+  const svg = document.getElementById("maskSvg");
+  const cell = 30, x0 = 105, y0 = 62;
+  let s = "";
+  // column headers (keys)
+  for (let j = 0; j < N; j++)
+    s += `<text x="${x0 + j*cell + cell/2}" y="${y0 - 10}" font-size="11" fill="#7d8ba0" text-anchor="middle">${words[j]}</text>`;
+  s += `<text x="${x0 + N*cell + 14}" y="${y0 - 10}" font-size="10" fill="#4b5568">key →</text>`;
+  // rows (queries)
+  for (let i = 0; i < N; i++) {
+    s += `<text x="${x0 - 8}" y="${y0 + i*cell + cell/2 + 4}" font-size="11" fill="#7d8ba0" text-anchor="end">${words[i]}</text>`;
+    for (let j = 0; j < N; j++) {
+      const causal = j <= i;
+      const leak = !causal;                              // any future key is a leak
+      let fill = "#1a2130", op = 1, stroke = "none";
+      if (causal)       { fill = "#5eead4"; op = 0.55 + 0.45 * Math.max(0, 1 - (i - j) / N); }
+      else if (leaky)   { fill = "#fb7185"; op = 0.9; stroke = "#fda4af"; }
+      s += `<rect x="${x0 + j*cell}" y="${y0 + i*cell}" width="${cell-3}" height="${cell-3}"
+              rx="5" fill="${fill}" fill-opacity="${op}" stroke="${stroke}"
+              style="transition:all .3s"><title>query ${words[i]} (t=${i}) → key ${words[j]} ${causal ? "· causal" : (leaky ? (j === i + 1 ? "· LEAK: the answer token itself" : "· future token (visible without a mask)") : "· masked")}</title></rect>`;
+      if (leaky && j === i + 1)
+        s += `<text x="${x0 + j*cell + cell/2 - 1}" y="${y0 + i*cell + cell/2 + 4}" font-size="12" fill="#0a0e14" text-anchor="middle" font-weight="bold">!</text>`;
+    }
+  }
+  // diagonal note
+  const yl = y0 + N*cell + 26;
+  s += `<text x="${x0}" y="${yl}" font-size="10.5" fill="${leaky ? "#fb7185" : "#4ade80"}">` +
+       (leaky ? "red = upper triangle visible (should be impossible in an autoregressive LM)"
+              : "lower triangle only — position t never sees t+1 …") + `</text>`;
+  s += `<text x="12" y="30" font-size="12" fill="#d7e0ec" font-weight="bold">attention mask (7-token window)</text>`;
+  svg.innerHTML = s;
+}
+drawMask();
+
+/* animate PPL bars when visible */
+const barsObs = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  document.getElementById("b1").style.width = "100%";
+  document.getElementById("b2").style.width = "62%";
+  document.getElementById("b3").style.width = "44%";
+  barsObs.disconnect();
+}), { threshold: .4 });
+barsObs.observe(document.querySelector(".pplbars"));
+
+/* =============== training curve =============== */
+const train = [{"s":0,"p":560.95},{"s":10,"p":516.86},{"s":20,"p":438.02},{"s":30,"p":349.87},{"s":40,"p":87.55},{"s":50,"p":83.89},{"s":60,"p":76.16},{"s":70,"p":79.78},{"s":80,"p":70.32},{"s":90,"p":62.48},{"s":100,"p":60.25},{"s":110,"p":62.75},{"s":120,"p":65.57},{"s":130,"p":72.14},{"s":140,"p":63.9},{"s":150,"p":66.85},{"s":160,"p":59.8},{"s":170,"p":49.15},{"s":180,"p":45.9},{"s":190,"p":45.46},{"s":200,"p":48.28},{"s":210,"p":43.38},{"s":220,"p":41.91},{"s":230,"p":40.51},{"s":240,"p":43.91},{"s":250,"p":44.01},{"s":260,"p":37.5},{"s":270,"p":39.31},{"s":280,"p":37.74},{"s":290,"p":40.01},{"s":300,"p":38.98},{"s":310,"p":35.51},{"s":320,"p":37.85},{"s":330,"p":38.54},{"s":340,"p":39.09},{"s":350,"p":39.15},{"s":360,"p":38.77},{"s":370,"p":35.85},{"s":380,"p":34.97},{"s":390,"p":38.62},{"s":400,"p":32.9},{"s":410,"p":34.92},{"s":420,"p":28.55},{"s":430,"p":31.62},{"s":440,"p":29.58},{"s":450,"p":37.89},{"s":460,"p":35.54},{"s":470,"p":31.42},{"s":480,"p":30.06},{"s":490,"p":32.11},{"s":500,"p":33.2},{"s":510,"p":30.98},{"s":520,"p":31.86},{"s":530,"p":33.69},{"s":540,"p":31.77},{"s":550,"p":33.41},{"s":560,"p":35.64},{"s":570,"p":33.69},{"s":580,"p":29.21},{"s":590,"p":30.81},{"s":599,"p":29.09}];
+const val = [{s:99,p:188.383},{s:199,p:505.06},{s:299,p:694.847},{s:399,p:812.624},{s:499,p:951.677},{s:599,p:1241.468}];
+
+(function drawCurve() {
+  const W = 900, H = 340, L = 56, R = 20, T = 20, B = 44;
+  const iw = W - L - R, ih = H - T - B;
+  const log10 = v => Math.log10(Math.max(v, 1));
+  const yMin = log10(25), yMax = log10(1500);
+  const X = s => L + (s / 600) * iw;
+  const Y = p => T + ih - ((log10(p) - yMin) / (yMax - yMin)) * ih;
+  let s = "";
+  // gridlines
+  [25, 50, 100, 200, 500, 1000].forEach(v => {
+    s += `<line x1="${L}" y1="${Y(v)}" x2="${W-R}" y2="${Y(v)}" stroke="#232c3b" stroke-dasharray="3 5"/>`;
+    s += `<text x="${L-8}" y="${Y(v)+4}" font-size="11" fill="#7d8ba0" text-anchor="end">${v}</text>`;
+  });
+  [0, 100, 200, 300, 400, 500, 600].forEach(v => {
+    s += `<text x="${X(v)}" y="${H-14}" font-size="11" fill="#7d8ba0" text-anchor="middle">${v}</text>`;
+  });
+  s += `<text x="14" y="${T+10}" font-size="11" fill="#7d8ba0">PPL</text>`;
+  s += `<text x="${W/2}" y="${H-14}" font-size="11" fill="#7d8ba0" text-anchor="middle">step</text>`;
+  // train line (gradient stroke)
+  const pts = train.map(d => `${X(d.s)},${Y(d.p)}`).join(" ");
+  s += `<polyline points="${pts}" fill="none" stroke="url(#g1)" stroke-width="2.4" stroke-linejoin="round"
+          style="stroke-dasharray:4000; stroke-dashoffset:4000; animation: dash 2.4s ease forwards"/>`;
+  // val diamonds
+  val.forEach((d, i) => {
+    s += `<rect x="${X(d.s)-6}" y="${Y(d.p)-6}" width="12" height="12" transform="rotate(45 ${X(d.s)} ${Y(d.p)})"
+          fill="#a78bfa" stroke="#0a0e14" stroke-width="1.5" opacity="0" style="animation: pop .4s ${1.6 + i*0.18}s forwards"/>`;
+    s += `<text x="${X(d.s)}" y="${Y(d.p)-13}" font-size="11" fill="#a78bfa" text-anchor="middle" opacity="0" style="animation: pop .4s ${1.7 + i*0.18}s forwards">${d.p < 1000 ? d.p.toFixed(0) : "1241"}</text>`;
+  });
+  // best marker
+  s += `<line x1="${X(99)}" y1="${T}" x2="${X(99)}" y2="${T+ih}" stroke="#4ade80" stroke-width="1" stroke-dasharray="2 4" opacity=".55"/>`;
+  s += `<text x="${X(99)+7}" y="${T+14}" font-size="11" fill="#4ade80">best ckpt (step 99, PPL 188)</text>`;
+  // overfit annotation
+  s += `<text x="${X(360)}" y="${Y(700)}" font-size="11.5" fill="#fb7185">↑ overfitting: train ↓, held-out ↑</text>`;
+  s = `<defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#a78bfa"/></linearGradient>
+       <style>@keyframes dash{to{stroke-dashoffset:0}} @keyframes pop{to{opacity:1}}</style></defs>` + s;
+  document.getElementById("curve").innerHTML = s;
+})();
+
+/* =============== generation samples =============== */
+const samples = [
+  { tab: "best · “The study found that ”",
+    prompt: "The study found that ",
+    body: `      e   ing        to s s   le         s           ed                                                  e `,
+    meta: "runs/small/best.pt (step 99, honest PPL 188.4) · temp 0.7 · top-k 40 · 120 tokens" },
+  { tab: "final · “The study found that ”",
+    prompt: "The study found that ",
+    body: `in the a could " Cied the the came sinal .
+The an grening with pot , the 1978 , 9 ) and song of heth , the wamled form , the the crited to regiic .
+The faver cinic R 's be men with `,
+    meta: "runs/small/final.pt (step 599, train PPL 29 — overfit, held-out 1241) · temp 0.6 · shows the overfitting trade-off plainly" },
+  { tab: "final · “In a statement released ”",
+    prompt: "In a statement released ",
+    body: ` .
+The fay , the tacone that such in sid of burching , be the way and 1921 , 10 @.@ 00 .
+Ho , 201 mams , 25 ( " , which doncic to baren was fure that gors .
+The the dem`,
+    meta: "runs/small/final.pt · temp 0.6 · punctuation, years, quotes and sentence breaks emerge from raw next-token training" },
+  { tab: "leaky ablation sample",
+    prompt: "the ",
+    body: `    alalalalalalalalalalalalalalalalalalalalalalalalalalalalalalalalalalalalal`,
+    meta: "runs/ablation leaky model (0.46M, 300 steps, causal=False) — the upstream defect: it wins PPL 1.006 yet degenerates instantly under generation" },
+];
+(function initTabs() {
+  const tabs = document.getElementById("tabs");
+  samples.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.textContent = s.tab;
+    if (i === 1) b.classList.add("on");
+    b.onclick = () => {
+      [...tabs.children].forEach(c => c.classList.remove("on"));
+      b.classList.add("on");
+      show(i);
+    };
+    tabs.appendChild(b);
+  });
+  function show(i) {
+    const s = samples[i];
+    const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    document.getElementById("sampout").innerHTML =
+      `<span class="prompt">${esc(s.prompt)}</span>${esc(s.body)}`;
+    document.getElementById("sampmeta").textContent = s.meta;
+  }
+  show(1);
+})();
+
+/* =============== scroll reveal =============== */
+const obs = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add("on"); obs.unobserve(e.target); }
+}), { threshold: .12 });
+document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

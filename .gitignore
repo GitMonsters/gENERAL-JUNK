@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Large binaries
+*.kmb
+*.kmx
+*.npz
+*.npy
+*.zip
+*.so
+*.fcidump
+*.bin
+*.pt
+*.pth
+
+# Temp files
+*.log
+*.partial
+~/
+
+# IDE
+.vscode/
+.idea/
+
+# Data files (too large)
+*.jsonl
+*.json.gz

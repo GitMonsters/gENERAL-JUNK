@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#020617">
+<title>Arizona Super Highways — Passport Hub Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  body { font-family:'Inter',sans-serif; background:#020617; color:#f8fafc; -webkit-font-smoothing:antialiased; }
+  .gold { color:#fbbf24; }
+  .no-scrollbar::-webkit-scrollbar{display:none}
+  .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+  @keyframes up { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .up { animation:up .3s ease-out both; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .live { animation:pulse 1.5s infinite; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+/* Inline lucide-style icon set (no build step / no icon CDN dependency) */
+const ICONS = {
+  MapPin: [['path',{d:'M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'}],['circle',{cx:'12',cy:'10',r:'3'}]],
+  QrCode: [['rect',{width:'5',height:'5',x:'3',y:'3',rx:'1'}],['rect',{width:'5',height:'5',x:'16',y:'3',rx:'1'}],['rect',{width:'5',height:'5',x:'3',y:'16',rx:'1'}],['path',{d:'M21 16h-3a2 2 0 0 0-2 2v3'}],['path',{d:'M21 21v.01'}],['path',{d:'M12 7v3a2 2 0 0 1-2 2H7'}],['path',{d:'M3 12h.01'}],['path',{d:'M12 3h.01'}],['path',{d:'M12 16v.01'}],['path',{d:'M16 12h1'}],['path',{d:'M21 12v.01'}],['path',{d:'M12 21v-1'}]],
+  ShoppingBag: [['path',{d:'M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z'}],['path',{d:'M3 6h18'}],['path',{d:'M16 10a4 4 0 0 1-8 0'}]],
+  Video: [['path',{d:'m22 8-6 4 6 4V8Z'}],['rect',{width:'14',height:'12',x:'2',y:'6',rx:'2'}]],
+  Lock: [['rect',{width:'18',height:'11',x:'3',y:'11',rx:'2'}],['path',{d:'M7 11V7a5 5 0 0 1 10 0v4'}]],
+  Navigation: [['polygon',{points:'3 11 22 2 13 21 11 13 3 11'}]],
+  Sparkles: [['path',{d:'m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z'}]],
+  Shield: [['path',{d:'M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1 1 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1Z'}]],
+  Compass: [['circle',{cx:'12',cy:'12',r:'10'}],['polygon',{points:'16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76'}]],
+  CheckCircle2: [['circle',{cx:'12',cy:'12',r:'10'}],['path',{d:'m9 12 2 2 4-4'}]],
+  Gift: [['rect',{width:'18',height:'14',x:'3',y:'8',rx:'2'}],['path',{d:'M12 8v14'}],['path',{d:'M3 12h18'}],['path',{d:'M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5'}]],
+  Flame: [['path',{d:'M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.4-2.4 1-3.5Z'}]],
+  ChevronRight: [['path',{d:'m9 18 6-6-6-6'}]],
+  X: [['path',{d:'M18 6 6 18'}],['path',{d:'m6 6 12 12'}]],
+};
+
+const Icon = ({ name, className = 'w-4 h-4', strokeWidth = 2 }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {ICONS[name].map(([tag, attrs], i) => React.createElement(tag, { key:i, ...attrs }))}
+  </svg>
+);
+
+/* ------------------------------------------------------------------ */
+const MEDUSA_LOGO = "https://medusafarms.com/wp-content/uploads/2021/01/Medusa-Coin-Rev-1.png";
+
+const TIERS = [
+  { name:'Pitstop Explorer', min:0,    label:'0–4 check-ins' },
+  { name:'Highway Cruiser',  min:5,    label:'5–14 check-ins' },
+  { name:'Road Legend',      min:15,   label:'15–24 check-ins' },
+  { name:'Super Highway Legend', min:25, label:'25+ stamps' },
+];
+
+const MEDUSA_MENU = [
+  { id:1, name:'Hai Dragon Flower — Blue Lobster (2g)', type:'Hybrid', price:18.00, category:'Flower',      tag:'Exclusive',    emoji:'🌿', thc:'27.4%' },
+  { id:2, name:'Dime Live Reserve Disposable — Papaya (1g)', type:'Hybrid', price:33.75, category:'Vapes', tag:'Top Seller', emoji:'💨', thc:'84.1%' },
+  { id:3, name:'Baked Bros Gummies BOGO (100mg)', type:'Sativa', price:22.00, category:'Edibles', tag:'Passport Deal', emoji:'🍬', thc:'10mg/pc' },
+  { id:4, name:'Saks THCa Powder Concentrate', type:'Extract', price:15.00, category:'Concentrates', tag:'Secret Drop', emoji:'💎', thc:'99.2%' },
+  { id:5, name:'Medusa OG Flower (3.5g)', type:'Indica', price:13.00, category:'Flower', tag:'Everyday Savings', emoji:'🐍', thc:'24.8%' },
+  { id:6, name:'Gorgon Glue Pre-Roll 2-Pack', type:'Hybrid', price:14.00, category:'Pre-Rolls', tag:'Member Perk', emoji:'🚬', thc:'23.4%' },
+];
+
+const DROPS = [
+  { id:'d1', name:'Diamond Sauce', sub:'Limited · 120 units', min:15, emoji:'💎' },
+  { id:'d2', name:'AZ Sun Flare', sub:'Passport exclusive', min:5, emoji:'🌿' },
+  { id:'d3', name:'Medusa Reserve', sub:'Hidden · in-store', min:25, emoji:'🐍' },
+];
+
+const STOPS = [
+  { id:'medusa', name:'Medusa Farms', city:'Kingman', dist:0.8, emoji:'🐍', stamps:true },
+  { id:'flag',   name:'High Desert Cannabis', city:'Flagstaff', dist:12.4, emoji:'🏔️', stamps:false },
+  { id:'tuc',    name:'Old Pueblo Dispensary', city:'Tucson', dist:48.7, emoji:'🌄', stamps:true },
+  { id:'yuma',   name:'Colorado River Botanicals', city:'Yuma', dist:66.2, emoji:'🏜️', stamps:false },
+];
+
+/* Arizona transaction privilege tax + cannabis excise (demo rates) */
+const AZ_TAX = {
+  kingman: { state:0.056, county:0.008, city:0.02, excise:0.16, label:'Kingman (Mohave)' },
+  phoenix: { state:0.056, county:0.007, city:0.023, excise:0.16, label:'Phoenix (Maricopa)' },
+  tucson:  { state:0.056, county:0.005, city:0.025, excise:0.16, label:'Tucson (Pima)' },
+  flagstaff:{state:0.056, county:0.0075,city:0.0235,excise:0.16, label:'Flagstaff (Coconino)' },
+};
+
+const money = n => `$${n.toFixed(2)}`;
+
+const App = () => {
+  const [tab, setTab] = useState('map');
+  const [checkedIn, setCheckedIn] = useState(true);
+  const [points, setPoints] = useState(340);
+  const [stamps, setStamps] = useState(3);
+  const [cart, setCart] = useState([]);
+  const [claimed, setClaimed] = useState([]);
+  const [toast, setToast] = useState(null);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [routed, setRouted] = useState(false);
+  const [post, setPost] = useState('');
+  const [feed, setFeed] = useState([
+    { id:1, user:'@MohaveExplorer_96', text:'Just stamped my physical passport at Medusa Farms in Kingman! Snagged the secret drop THCa powder.', time:'12m ago', live:true, likes:18, liked:false },
+    { id:2, user:'@DesertRoadTripper', text:'Stop #4 on the I-40 run. The 15% first-visit passport perk stacked with the BOGO gummies.', time:'1h ago', live:false, likes:11, liked:false },
+    { id:3, user:'@AZ_TerpeneChaser', text:'Review: Blue Lobster is the stickiest thing on the shelf right now. Ask for a Ganja Guide.', time:'3h ago', live:false, likes:27, liked:false },
+  ]);
+
+  const tierIndex = stamps >= 25 ? 3 : stamps >= 15 ? 2 : stamps >= 5 ? 1 : 0;
+  const tier = TIERS[tierIndex];
+
+  const notify = (title, msg, icon='✅') => {
+    setToast({ title, msg, icon });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const toggleCheckIn = () => {
+    if (checkedIn) {
+      setCheckedIn(false);
+      notify('Checked out', 'Visit saved to your history', '👋');
+    } else {
+      setCheckedIn(true);
+      setPoints(p => p + 100);
+      setStamps(s => s + 1);
+      notify('Passport checked in!', '+100 pts unlocked at Medusa Farms', '🎫');
+    }
+  };
+
+  const addToCart = (item) => {
+    setCart(c => {
+      const found = c.find(x => x.id === item.id);
+      return found ? c.map(x => x.id === item.id ? {...x, qty:x.qty+1} : x) : [...c, {...item, qty:1}];
+    });
+    notify('Added to cart', item.name, '🛒');
+  };
+
+  const claimDrop = (drop) => {
+    if (claimed.includes(drop.id)) return;
+    if (stamps < drop.min) { notify('Locked drop', `${drop.name} needs ${drop.min} check-ins`, '🔒'); return; }
+    setClaimed(c => [...c, drop.id]);
+    notify('Drop claimed', `${drop.name} is in your wallet`, '💎');
+  };
+
+  /* -------- pricing (mirrors integration/az-tax-engine.js) -------- */
+  const subtotal = cart.reduce((s,i) => s + i.price * i.qty, 0);
+  const taxable  = subtotal;
+  const rate     = AZ_TAX.kingman;
+  const tpt      = taxable * (rate.state + rate.county + rate.city);
+  const excise   = taxable * rate.excise;         // adult-use only
+  const fees     = subtotal > 0 ? 4.99 : 0;        // delivery fee
+  const total    = subtotal + tpt + excise + fees;
+
+  const submitPost = (e) => {
+    e.preventDefault();
+    if (!post.trim()) return;
+    setFeed([{ id:Date.now(), user:'@you', text:post, time:'now', live:false, likes:0, liked:false }, ...feed]);
+    setPost('');
+    notify('Posted', 'Shared to the encrypted highway feed', '📸');
+  };
+
+  /* ---------------- UI ---------------- */
+  const Header = () => (
+    <header className="px-5 py-4 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="font-extrabold text-base tracking-wider text-amber-400">AZ SUPER HIGHWAYS</h1>
+          <p className="text-[11px] text-slate-400">Passport Hub &amp; Geo-Guide</p>
+        </div>
+        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-full">
+          <Icon name="Sparkles" className="w-3.5 h-3.5 text-amber-400" />
+          <span className="text-[10px] text-amber-300 font-bold">{tier.name}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 mt-2">
+        <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-full bg-amber-400 rounded-full transition-all duration-700"
+               style={{ width:`${Math.min(100, (stamps / 25) * 100)}%` }} />
+        </div>
+        <span className="text-[10px] text-slate-400">{stamps}/25 stamps · {points} pts</span>
+      </div>
+    </header>
+  );
+
+  const AnchorCard = () => (
+    <section className="bg-slate-900 border border-slate-800 rounded-2xl p-4 relative overflow-hidden shadow-lg">
+      <div className="absolute top-0 right-0 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-3 py-1 rounded-bl-lg border-l border-b border-emerald-500/30">
+        ANCHOR PARTNER
+      </div>
+      <div className="flex items-start gap-3">
+        <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center overflow-hidden shrink-0">
+          <img src={MEDUSA_LOGO} alt="Medusa Farms" className="w-12 h-12 object-contain"
+               onError={e=>{e.currentTarget.style.display='none'; e.currentTarget.parentElement.textContent='🐍';}} />
+        </div>
+        <div className="min-w-0">
+          <h2 className="font-bold text-base text-slate-100 leading-tight">Medusa Farms Dispensary</h2>
+          <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+            <Icon name="MapPin" className="w-3 h-3 text-rose-400" /> 3490 N Bank St, Kingman, AZ
+          </p>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md border border-slate-700">Dutchie POS routing</span>
+            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/30">Delivery</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 pt-3 border-t border-slate-800/80">
+        <button onClick={toggleCheckIn}
+          className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[.99] ${
+            checkedIn
+              ? 'bg-emerald-600/20 border border-emerald-500 text-emerald-300'
+              : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20'
+          }`}>
+          {checkedIn
+            ? <><Icon name="CheckCircle2" className="w-4 h-4 text-emerald-400" /> Passport Checked In · 100 Pts Unlocked</>
+            : <><Icon name="QrCode" className="w-4 h-4" /> Scan Passport QR at Medusa Farms</>}
+        </button>
+      </div>
+    </section>
+  );
+
+  const MapView = () => (
+    <div className="space-y-3 up">
+      <AnchorCard />
+
+      <div className="h-48 bg-slate-900 border border-slate-800 rounded-2xl relative flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 opacity-40"
+             style={{backgroundImage:'radial-gradient(#334155 1px, transparent 1px)', backgroundSize:'16px 16px'}} />
+        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full opacity-30" preserveAspectRatio="none">
+          <path d="M20,8 L78,8 L78,60 L83,60 L83,74 L70,82 L61,93 L30,93 L23,85 L18,70 L20,40 Z"
+                fill="none" stroke="#fbbf24" strokeWidth="0.8" />
+        </svg>
+        <div className="absolute text-center">
+          <div className="p-2 bg-amber-500 text-slate-950 rounded-full shadow-lg font-bold text-[11px] flex items-center gap-1 border-2 border-slate-900">
+            <Icon name="Navigation" className="w-3 h-3 fill-slate-950" /> Medusa Farms · 0.8 mi
+          </div>
+        </div>
+        <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md border border-slate-800 px-3 py-1.5 rounded-lg text-[10px] text-slate-300">
+          Live geofence: <span className="text-emerald-400">I-40 corridor</span>
+        </div>
+        <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center">
+          <Icon name="Compass" className="w-4 h-4" />
+        </div>
+      </div>
+
+      <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
+            <Icon name="Sparkles" className="w-3.5 h-3.5" /> Passport Exclusive Offer
+          </span>
+          <span className="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded">Active today</span>
+        </div>
+        <p className="text-[11px] text-slate-300 mt-1 font-medium">
+          Show your physical booklet at the Medusa Farms register for 15% off your first visit, a BOGO cartridge, and access to the secret THCa drop.
+        </p>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Stamp stops near you</h3>
+          <span className="text-[10px] text-slate-500">{stamps} collected</span>
+        </div>
+        <div className="space-y-2">
+          {STOPS.map(s => (
+            <div key={s.id} className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center text-base">{s.emoji}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold truncate">{s.name}</p>
+                <p className="text-[10px] text-slate-500">{s.city} · {s.dist} mi</p>
+              </div>
+              {s.stamps ? <span className="text-[10px] text-emerald-400 font-bold">STAMPED</span>
+                        : <span className="text-[10px] text-amber-400 font-bold">+50 PTS</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Hidden drops</h3>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {DROPS.map(d => {
+            const locked = stamps < d.min;
+            return (
+              <button key={d.id} onClick={() => claimDrop(d)}
+                className={`min-w-[110px] bg-slate-900 border rounded-xl p-2.5 text-left active:scale-95 transition ${locked?'border-slate-800 opacity-70':'border-amber-500/40'}`}>
+                <div className="text-2xl mb-1">{d.emoji} {locked && <span className="text-[10px]">🔒</span>}</div>
+                <p className="text-[11px] font-bold leading-tight">{d.name}</p>
+                <p className="text-[9px] text-amber-400">{d.sub}</p>
+                <p className="text-[9px] text-slate-500 mt-0.5">{d.min}+ check-ins</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  const MenuView = () => (
+    <div className="space-y-3 up">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Medusa Farms live menu</h3>
+          <p className="text-[10px] text-slate-500">Synced via Dutchie POS · prices before tax</p>
+        </div>
+        <button onClick={() => setCartOpen(true)} className="text-[10px] text-amber-400 font-bold flex items-center gap-1">
+          <Icon name="ShoppingBag" className="w-3.5 h-3.5" /> Cart ({cart.reduce((s,i)=>s+i.qty,0)})
+        </button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        {['All','Flower','Vapes','Edibles'].map((f,i)=>(
+          <div key={f} className={`text-[10px] text-center py-1.5 rounded-lg border ${i===0?'bg-amber-500 text-slate-950 border-amber-500 font-bold':'bg-slate-900 border-slate-800 text-slate-400'}`}>{f}</div>
+        ))}
+      </div>
+
+      <div className="grid gap-2">
+        {MEDUSA_MENU.map(item => (
+          <div key={item.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-lg">{item.emoji}</div>
+            <div className="flex-1 min-w-0">
+              <span className="text-[9px] text-amber-400 font-bold uppercase tracking-wide">{item.category} · {item.tag}</span>
+              <h4 className="text-[11px] font-bold text-slate-200 leading-tight">{item.name}</h4>
+              <p className="text-[10px] text-slate-500">THC {item.thc}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-emerald-400 font-bold">{money(item.price)}</p>
+              <button onClick={() => addToCart(item)}
+                className="mt-1 p-2 bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-200 rounded-lg transition-colors active:scale-95">
+                <Icon name="ShoppingBag" className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[9px] text-slate-600 text-center">Demo inventory · live stock and pricing come from the Dutchie API</p>
+    </div>
+  );
+
+  const SocialView = () => (
+    <div className="space-y-3 up">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Icon name="Shield" className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs font-bold text-slate-200">Encrypted highway feed</span>
+          </div>
+          <span className="text-[9px] text-slate-500">E2E encrypted</span>
+        </div>
+        <form onSubmit={submitPost} className="flex gap-2">
+          <input value={post} onChange={e=>setPost(e.target.value)} placeholder="Share a check-in, photo or review…"
+            className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-[11px] outline-none focus:border-amber-500/50" />
+          <button className="px-3 rounded-lg bg-amber-500 text-slate-950 text-[11px] font-bold">Post</button>
+        </form>
+      </div>
+
+      {feed.map(p => (
+        <div key={p.id} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+          <div className="flex items-center justify-between">
+            <p className="font-bold text-[11px] text-amber-400">{p.user}</p>
+            <span className="text-[9px] text-slate-500">{p.time}</span>
+          </div>
+          <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">{p.text}</p>
+          <div className="mt-2 flex items-center gap-3 text-[10px] text-slate-500">
+            <button onClick={() => setFeed(f => f.map(x => x.id===p.id ? {...x, liked:!x.liked, likes:x.likes+(x.liked?-1:1)} : x))}
+              className={`flex items-center gap-1 ${p.liked?'text-rose-400':''}`}>
+              <Icon name="Flame" className="w-3 h-3" /> {p.likes}
+            </button>
+            {p.live && <span className="flex items-center gap-1"><Icon name="Video" className="w-3 h-3 text-rose-400" /> Live replay</span>}
+            <span className="ml-auto">🔒 verified</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const CartSheet = () => {
+    if (!cartOpen) return null;
+    return (
+      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center" onClick={()=>setCartOpen(false)}>
+        <div className="w-full max-w-md bg-slate-900 border-t border-slate-700 rounded-t-3xl p-5 pb-8 up" onClick={e=>e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-sm">Your order · Medusa Farms</h3>
+            <button onClick={()=>setCartOpen(false)} className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+              <Icon name="X" className="w-4 h-4" />
+            </button>
+          </div>
+
+          {!routed ? (
+            <>
+              {cart.length === 0 && <p className="text-[11px] text-slate-500 text-center py-6">Your cart is empty — add something from the Dutchie menu.</p>}
+              <div className="space-y-1.5 mb-3">
+                {cart.map(i => (
+                  <div key={i.id} className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-300 truncate mr-2">{i.qty}× {i.name}</span>
+                    <span className="text-slate-400">{money(i.price*i.qty)}</span>
+                  </div>
+                ))}
+              </div>
+
+              {cart.length > 0 && (
+                <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-[11px] space-y-1 mb-3">
+                  <div className="flex justify-between"><span className="text-slate-400">Subtotal</span><span>{money(subtotal)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">TPT ({((rate.state+rate.county+rate.city)*100).toFixed(2)}%)</span><span>{money(tpt)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">AZ excise (16%)</span><span>{money(excise)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">Delivery</span><span>{money(fees)}</span></div>
+                  <div className="flex justify-between font-bold pt-2 border-t border-slate-800">
+                    <span>Total</span><span className="text-amber-400">{money(total)}</span>
+                  </div>
+                  <p className="text-[9px] text-slate-600 pt-1">Rates shown for {rate.label} · estimate only</p>
+                </div>
+              )}
+
+              <button disabled={!cart.length}
+                onClick={()=>{setRouted(true); setTimeout(()=>setRouted(false), 2600);}}
+                className={`w-full py-3 rounded-xl font-bold text-xs ${cart.length?'bg-amber-500 text-slate-950':'bg-slate-800 text-slate-500'}`}>
+                Route order to closest Dutchie location
+              </button>
+            </>
+          ) : (
+            <div className="text-center py-6">
+              <Icon name="CheckCircle2" className="w-10 h-10 text-emerald-400 mx-auto" />
+              <p className="font-bold text-sm mt-2">Order routed</p>
+              <p className="text-[11px] text-slate-400">Medusa Farms · 0.8 mi · ready in ~15 min</p>
+              <p className="text-[10px] text-emerald-400 mt-1">All items in stock · delivery ETA 35 min</p>
+              <p className="text-[9px] text-slate-500 mt-3">Order payload sent to Dutchie POS (demo)</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const Toast = () => toast ? (
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] w-[88%] max-w-sm up">
+      <div className="bg-slate-900/95 backdrop-blur border border-amber-500/30 rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-xl">
+        <span className="text-lg">{toast.icon}</span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold leading-tight">{toast.title}</p>
+          <p className="text-[10px] text-slate-400 leading-tight truncate">{toast.msg}</p>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  return (
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-slate-950 text-slate-100 border-x border-slate-800 shadow-2xl relative">
+      <Header />
+      <main className="flex-1 overflow-y-auto p-4 pb-28 space-y-4 no-scrollbar">
+        {tab === 'map' && <MapView />}
+        {tab === 'menu' && <MenuView />}
+        {tab === 'social' && <SocialView />}
+      </main>
+
+      <nav className="bg-slate-900 border-t border-slate-800 px-6 py-3 pb-[max(12px,env(safe-area-inset-bottom))] flex justify-around items-center">
+        {[
+          ['map','Compass','Live Map'],
+          ['menu','ShoppingBag','Dutchie Menu'],
+          ['social','Lock','Encrypted Feed'],
+        ].map(([id,icon,label]) => (
+          <button key={id} onClick={()=>setTab(id)}
+            className={`flex flex-col items-center gap-1 text-[10px] font-medium ${tab===id?'text-amber-400':'text-slate-500'}`}>
+            <Icon name={icon} className="w-5 h-5" /> {label}
+          </button>
+        ))}
+      </nav>
+
+      <CartSheet />
+      <Toast />
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

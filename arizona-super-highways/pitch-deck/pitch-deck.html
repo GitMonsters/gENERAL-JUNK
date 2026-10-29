@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Arizona Super Highways — Investor Pitch Deck</title>
+<style>
+  @page { size: 13.333in 7.5in; margin: 0; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body { font-family:"Segoe UI", Arial, sans-serif; background:#0b0f1a; color:#f8fafc; }
+  .slide {
+    width:13.333in; height:7.5in; position:relative; overflow:hidden;
+    page-break-after:always; break-after:page;
+    background:radial-gradient(1200px 600px at 85% -10%, rgba(212,175,55,.10), transparent 60%),
+               radial-gradient(900px 500px at -10% 110%, rgba(108,52,131,.18), transparent 60%),
+               #0b0f1a;
+    padding:0.62in 0.72in;
+    display:flex; flex-direction:column;
+  }
+  .slide:last-child { page-break-after:auto; }
+  .kicker { font-size:9.5pt; letter-spacing:.28em; text-transform:uppercase; color:#d4af37; font-weight:700; }
+  h1 { font-size:44pt; line-height:1.02; letter-spacing:-.02em; font-weight:800; }
+  h2 { font-size:30pt; line-height:1.05; letter-spacing:-.01em; font-weight:800; }
+  h3 { font-size:13pt; font-weight:700; }
+  p, li { font-size:12.5pt; line-height:1.45; color:#cbd5e1; }
+  .sub { color:#94a3b8; }
+  .gold { color:#d4af37; }
+  .rule { height:3px; width:64px; background:#d4af37; border-radius:2px; margin:10px 0 18px; }
+  .foot { position:absolute; bottom:0.34in; left:0.72in; right:0.72in; display:flex; justify-content:space-between;
+          font-size:8pt; color:#475569; letter-spacing:.06em; border-top:1px solid rgba(255,255,255,.07); padding-top:6px; }
+  .num { font-size:9pt; color:#64748b; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0.32in; }
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:0.26in; }
+  .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:0.2in; }
+  .card { background:rgba(30,41,59,.55); border:1px solid rgba(255,255,255,.09); border-radius:14px; padding:0.22in; }
+  .card.goldb { border-color:rgba(212,175,55,.45); background:rgba(212,175,55,.06); }
+  .big { font-size:30pt; font-weight:800; line-height:1; }
+  .stat { font-size:11pt; color:#94a3b8; }
+  .tag { display:inline-block; font-size:8pt; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+         padding:4px 9px; border-radius:20px; background:rgba(212,175,55,.14); color:#e8c766; border:1px solid rgba(212,175,55,.3); }
+  .tag.green { background:rgba(39,174,96,.14); color:#4ade80; border-color:rgba(39,174,96,.35); }
+  .tag.purple { background:rgba(108,52,131,.25); color:#d8b4fe; border-color:rgba(168,85,247,.35); }
+  ul { padding-left:16px; }
+  li { margin-bottom:6px; }
+  .step { display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; }
+  .step .n { width:24px; height:24px; border-radius:50%; background:#d4af37; color:#0b0f1a; font-weight:800;
+             font-size:11pt; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  table { width:100%; border-collapse:collapse; font-size:11pt; }
+  th { text-align:left; font-size:8.5pt; letter-spacing:.12em; text-transform:uppercase; color:#64748b;
+       padding:8px 10px; border-bottom:1px solid rgba(255,255,255,.12); }
+  td { padding:9px 10px; border-bottom:1px solid rgba(255,255,255,.05); color:#cbd5e1; }
+  tr:last-child td { border-bottom:none; }
+  td.strong { color:#f8fafc; font-weight:700; }
+  .bar { height:12px; border-radius:6px; background:rgba(255,255,255,.07); overflow:hidden; margin-top:6px; }
+  .bar > div { height:100%; background:linear-gradient(90deg,#8a6d1f,#d4af37); border-radius:6px; }
+  .cover { justify-content:center; background:
+      radial-gradient(900px 700px at 78% 18%, rgba(212,175,55,.22), transparent 62%),
+      radial-gradient(700px 500px at 10% 90%, rgba(108,52,131,.35), transparent 65%),
+      linear-gradient(135deg,#0b0f1a 0%, #121a2b 55%, #1a1220 100%); }
+  .cover h1 { font-size:56pt; }
+  .cover .sub2 { font-size:15pt; color:#e2e8f0; max-width:7.6in; line-height:1.4; }
+  .badge { width:1.15in; height:1.15in; border-radius:50%; border:2px solid rgba(212,175,55,.5);
+           display:flex; align-items:center; justify-content:center; font-size:34pt;
+           background:radial-gradient(circle, rgba(212,175,55,.18), rgba(11,15,26,.2)); }
+  .logo { display:flex; align-items:center; gap:14px; }
+  .logo .mark { width:0.5in; height:0.5in; border-radius:50%; background:linear-gradient(135deg,#f7dc6f,#d4af37 60%,#a06d00);
+                display:flex; align-items:center; justify-content:center; font-size:18pt; }
+  .logo .name { font-size:13pt; font-weight:800; letter-spacing:.16em; }
+  .logo .name span { color:#d4af37; }
+  .quote { font-size:15pt; line-height:1.5; color:#e2e8f0; font-style:italic; }
+  .divider { height:1px; background:rgba(255,255,255,.08); margin:12px 0; }
+  .mini { font-size:9.5pt; color:#64748b; line-height:1.4; }
+  .pillrow { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<!-- 1 TITLE -->
+<div class="slide cover">
+  <div class="logo" style="position:absolute;top:0.6in;left:0.72in;">
+    <div class="mark">🐍</div>
+    <div class="name">ARIZONA <span>SUPER HIGHWAYS</span></div>
+  </div>
+  <div style="margin-top:0.4in;">
+    <div class="kicker">Investor &amp; Partner Deck · 2026</div>
+    <h1 style="margin-top:12px;">The Physical-to-Digital<br>Cannabis Directory<br>&amp; Loyalty Ecosystem</h1>
+    <p class="sub2" style="margin-top:18px;">A pocket passport that drives verified foot traffic — backed by a live map, Dutchie ordering, and an encrypted community app.</p>
+    <div class="pillrow" style="margin-top:22px;">
+      <span class="tag">Print + App</span>
+      <span class="tag green">Dutchie POS</span>
+      <span class="tag purple">Anchor: Medusa Farms</span>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:0.55in;left:0.72in;right:0.72in;display:flex;justify-content:space-between;align-items:flex-end;">
+    <p class="mini">Launch model: Medusa Farms · 3490 N Bank St, Kingman, AZ · medusafarms.com</p>
+    <div class="badge">🐍</div>
+  </div>
+</div>
+
+<!-- 2 PROBLEM -->
+<div class="slide">
+  <div class="kicker">01 · The Problem</div>
+  <div class="rule"></div>
+  <h2>Cannabis retail is great at product.<br>Terrible at discovery.</h2>
+  <div class="grid3" style="margin-top:0.34in;">
+    <div class="card">
+      <div class="big gold">01</div>
+      <h3 style="margin-top:10px;">Ad bans</h3>
+      <p>Meta and Google restrict cannabis advertising, so dispensaries pay a premium for every new customer and can't build reach.</p>
+    </div>
+    <div class="card">
+      <div class="big gold">02</div>
+      <h3 style="margin-top:10px;">Loyalty fatigue</h3>
+      <p>Every chain has its own app. Tourists won't install five of them, and locals ignore push notifications from an app they open twice.</p>
+    </div>
+    <div class="card">
+      <div class="big gold">03</div>
+      <h3 style="margin-top:10px;">Paper dead-ends</h3>
+      <p>Printed maps can't show live menus, can't take an order, and can't prove ROI to the advertiser who paid for the page.</p>
+    </div>
+  </div>
+  <div class="card goldb" style="margin-top:0.3in;">
+    <p style="font-size:14pt;color:#f8fafc;"><b class="gold">The gap:</b> Arizona has 160+ dispensaries and a massive Route 66 tourism corridor, but no shared passport that turns a road trip into measurable, repeat business.</p>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">02</span></div>
+</div>
+
+<!-- 3 SOLUTION -->
+<div class="slide">
+  <div class="kicker">02 · The Solution</div>
+  <div class="rule"></div>
+  <h2>One passport. Every highway.</h2>
+  <p class="sub" style="margin-top:6px;max-width:9in;">A collectible pocket magazine plus a companion app — designed so the print piece earns the download, and the app proves the print piece works.</p>
+  <div class="grid2" style="margin-top:0.3in;">
+    <div class="card goldb">
+      <div class="tag">Physical</div>
+      <h3 style="margin-top:12px;font-size:17pt;">The Pocket Passport</h3>
+      <ul>
+        <li>3.75″ × 5.25″ saddle-stitched booklet</li>
+        <li>Region-by-region dispensary + wellness directory</li>
+        <li>Ink stamp boxes and signed QR check-ins</li>
+        <li>Brand, event, treatment center and workshop ads</li>
+        <li>Sold at $19.99 and distributed free at partner counters</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="tag green">Digital</div>
+      <h3 style="margin-top:12px;font-size:17pt;">The App &amp; Live Map</h3>
+      <ul>
+        <li>Geo-located map with real-time menus</li>
+        <li>Passport stamps, tiers, and reward wallet</li>
+        <li>Dutchie ordering with closest-location routing</li>
+        <li>Social feed, reviews, and live event streams</li>
+        <li>End-to-end encrypted member/business messaging</li>
+      </ul>
+    </div>
+  </div>
+  <div class="grid4" style="margin-top:0.28in;">
+    <div class="card" style="text-align:center;padding:0.16in;"><div style="margin:0 auto 6px;width:22px;height:22px;border-radius:50%;background:#d4af37;color:#0b0f1a;font-weight:800;display:flex;align-items:center;justify-content:center;">1</div><p style="font-size:11pt;color:#f8fafc;font-weight:600;">Scan in</p></div>
+    <div class="card" style="text-align:center;padding:0.16in;"><div style="margin:0 auto 6px;width:22px;height:22px;border-radius:50%;background:#d4af37;color:#0b0f1a;font-weight:800;display:flex;align-items:center;justify-content:center;">2</div><p style="font-size:11pt;color:#f8fafc;font-weight:600;">Earn stamps</p></div>
+    <div class="card" style="text-align:center;padding:0.16in;"><div style="margin:0 auto 6px;width:22px;height:22px;border-radius:50%;background:#d4af37;color:#0b0f1a;font-weight:800;display:flex;align-items:center;justify-content:center;">3</div><p style="font-size:11pt;color:#f8fafc;font-weight:600;">Unlock drops</p></div>
+    <div class="card" style="text-align:center;padding:0.16in;"><div style="margin:0 auto 6px;width:22px;height:22px;border-radius:50%;background:#d4af37;color:#0b0f1a;font-weight:800;display:flex;align-items:center;justify-content:center;">4</div><p style="font-size:11pt;color:#f8fafc;font-weight:600;">Order &amp; route</p></div>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">03</span></div>
+</div>
+
+<!-- 4 PRODUCT / DEMO -->
+<div class="slide">
+  <div class="kicker">03 · Product</div>
+  <div class="rule"></div>
+  <h2>Built, clickable, and demo-ready.</h2>
+  <div class="grid2" style="margin-top:0.26in;">
+    <div>
+      <div class="card" style="margin-bottom:0.18in;">
+        <div class="tag green">Working prototype</div>
+        <h3 style="margin-top:10px;">Interactive app demo</h3>
+        <p>Live map, check-in, tier progress, Dutchie menu with cart, AZ tax estimate, encrypted feed, and event streaming UI.</p>
+      </div>
+      <div class="card" style="margin-bottom:0.18in;">
+        <div class="tag">Print prototype</div>
+        <h3 style="margin-top:10px;">Pocket passport PDF</h3>
+        <p>Eight-page, print-ready trim-size booklet with Medusa Farms as the featured stop, stamp boxes, tier ladder, and QR codes.</p>
+      </div>
+      <div class="card">
+        <div class="tag purple">Technical spec</div>
+        <h3 style="margin-top:10px;">Architecture &amp; integration</h3>
+        <p>Data models, API surface, QR signing, order-routing logic, Arizona tax engine, and partner agreements.</p>
+      </div>
+    </div>
+    <div class="card goldb" style="display:flex;flex-direction:column;justify-content:center;">
+      <div class="kicker">Demo model</div>
+      <h3 style="font-size:22pt;margin-top:8px;">Medusa Farms</h3>
+      <p class="sub" style="margin-top:4px;">3490 N Bank Street, Kingman, AZ 86409 · (928) 421-0020 · medusafarms.com</p>
+      <div class="divider"></div>
+      <ul>
+        <li>Open since 2018 · recreational + medical</li>
+        <li>Everyday savings: $13 / 3.5g, $80 / oz, $15 / 1g concentrates</li>
+        <li>Dutchie-menu compatible for live ordering</li>
+        <li>Anchor of the Western / Route 66 district</li>
+      </ul>
+      <p class="mini" style="margin-top:10px;">All screens and print pages in this deck are populated with Medusa Farms as the launch partner.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">04</span></div>
+</div>
+
+<!-- 5 HOW IT WORKS -->
+<div class="slide">
+  <div class="kicker">04 · How It Works</div>
+  <div class="rule"></div>
+  <h2>From paper to purchase.</h2>
+  <div class="grid2" style="margin-top:0.28in;gap:0.5in;">
+    <div>
+      <div class="step"><div class="n">1</div><div><h3>Discover</h3><p>Traveler picks up the passport at a hotel, dispensary, or event. Every listing has a signed QR code.</p></div></div>
+      <div class="step"><div class="n">2</div><div><h3>Check in</h3><p>Scan at the counter. The app verifies the signature, adds a stamp, and awards points instantly.</p></div></div>
+      <div class="step"><div class="n">3</div><div><h3>Unlock</h3><p>Tier-gated offers, BOGO deals, swag, and hidden drops appear in the wallet based on stamps collected.</p></div></div>
+      <div class="step"><div class="n">4</div><div><h3>Order</h3><p>Cart routes to the closest partner with live Dutchie inventory. Taxes calculated for that jurisdiction.</p></div></div>
+      <div class="step"><div class="n">5</div><div><h3>Return</h3><p>Points, badges, reviews, and event invites pull the member back — to this store or the next stop on the highway.</p></div></div>
+    </div>
+    <div class="card goldb">
+      <h3>Attribution loop</h3>
+      <p class="sub" style="margin-top:4px;">Every printed page has a unique code, so the partner sees exactly which placement produced the visit.</p>
+      <div class="divider"></div>
+      <table>
+        <tr><td class="strong">Printed QR scans</td><td>Tracked per page</td></tr>
+        <tr><td class="strong">Check-ins</td><td>Stamp + timestamp</td></tr>
+        <tr><td class="strong">Offer redemptions</td><td>Rotating code</td></tr>
+        <tr><td class="strong">Routed orders</td><td>Dutchie order ID</td></tr>
+        <tr><td class="strong">Return rate</td><td>Member cohort</td></tr>
+      </table>
+      <p class="mini" style="margin-top:12px;">Partners receive a monthly dashboard; members are never exposed as PII.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">05</span></div>
+</div>
+
+<!-- 6 MARKET -->
+<div class="slide">
+  <div class="kicker">05 · Market</div>
+  <div class="rule"></div>
+  <h2>A $1B+ market with no shared passport.</h2>
+  <div class="grid3" style="margin-top:0.3in;">
+    <div class="card" style="text-align:center;">
+      <div class="big gold">$1.4B</div>
+      <p class="stat">Est. annual Arizona cannabis sales</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="big gold">165+</div>
+      <p class="stat">Licensed dispensaries statewide</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="big gold">$500M+</div>
+      <p class="stat">Serviceable loyalty + local ad spend</p>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:0.3in;">
+    <div class="card">
+      <h3>Why Arizona, why now</h3>
+      <ul>
+        <li>Route 66 and I-40 tourism funnel through Kingman and Flagstaff</li>
+        <li>Rec market is mature; operators compete on retention, not novelty</li>
+        <li>Advertising restrictions make owned channels and print newly valuable</li>
+        <li>Dutchie is already the POS for a large share of stores — ordering is a plug-in, not a build</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Who we serve</h3>
+      <ul>
+        <li><b>The road tripper</b> — plans stops, chases stamps and drops</li>
+        <li><b>The local regular</b> — maximizes tier perks and event access</li>
+        <li><b>The connoisseur</b> — reviews, limited drops, workshops</li>
+        <li><b>The operator</b> — foot traffic, attribution, and an owned audience</li>
+      </ul>
+    </div>
+  </div>
+  <p class="mini" style="margin-top:14px;">Market figures are directional estimates for planning; validate in diligence.</p>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">06</span></div>
+</div>
+
+<!-- 7 BUSINESS MODEL -->
+<div class="slide">
+  <div class="kicker">06 · Business Model</div>
+  <div class="rule"></div>
+  <h2>Four revenue lines, one audience.</h2>
+  <table style="margin-top:0.22in;">
+    <tr><th>Stream</th><th>Price</th><th>What the partner gets</th><th>Share of Y1 revenue</th></tr>
+    <tr><td class="strong">Headline sponsor</td><td>$3,500 / mo</td><td>Cover logo, exclusive drop slot, live-stream sponsorship</td><td>45%</td></tr>
+    <tr><td class="strong">Highway tier</td><td>$1,500 / mo</td><td>Full print page, featured Dutchie integration, push</td><td>25%</td></tr>
+    <tr><td class="strong">Base directory</td><td>$500 / mo</td><td>Listing, map pin, one offer</td><td>15%</td></tr>
+    <tr><td class="strong">Booklet + routing</td><td>$19.99 cover · 3% of routed subtotal</td><td>Resale margin + order attribution</td><td>15%</td></tr>
+  </table>
+  <div class="grid3" style="margin-top:0.26in;">
+    <div class="card"><h3 class="gold">Recurring first</h3><p>Sponsorships are monthly and annual — predictable revenue before a single guide is sold.</p></div>
+    <div class="card"><h3 class="gold">Print is the moat</h3><p>Competitors can copy an app. They can't copy a distributed physical passport with signed attribution.</p></div>
+    <div class="card"><h3 class="gold">Routing compounds</h3><p>Every order teaches the router which stores convert, improving placement value each month.</p></div>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">07</span></div>
+</div>
+
+<!-- 8 UNIT ECONOMICS -->
+<div class="slide">
+  <div class="kicker">07 · Unit Economics</div>
+  <div class="rule"></div>
+  <h2>The pilot pays for itself at 6 partners.</h2>
+  <div class="grid2" style="margin-top:0.26in;">
+    <div class="card">
+      <h3>Print run · 10,000 guides</h3>
+      <table>
+        <tr><td>Design + prepress</td><td class="strong">$6,000</td></tr>
+        <tr><td>Print (80lb text, soft-touch cover)</td><td class="strong">$18,500</td></tr>
+        <tr><td>Foil stamp + rounded corners</td><td class="strong">$3,500</td></tr>
+        <tr><td>Distribution + freight</td><td class="strong">$4,000</td></tr>
+        <tr><td class="strong">Total</td><td class="strong gold">$32,000</td></tr>
+        <tr><td>Cost per guide</td><td class="strong">$3.20</td></tr>
+      </table>
+      <p class="mini" style="margin-top:8px;">Cover price $19.99, partner resale split 40/60. Ad revenue is the primary return; booklet sales offset print.</p>
+    </div>
+    <div class="card goldb">
+      <h3>Per-partner economics</h3>
+      <table>
+        <tr><td>Average sponsorship</td><td class="strong">$1,500 / mo</td></tr>
+        <tr><td>Target partners, month 12</td><td class="strong">50</td></tr>
+        <tr><td>Sponsorship MRR</td><td class="strong">$75,000</td></tr>
+        <tr><td>Routing revenue (est.)</td><td class="strong">$8,000 / mo</td></tr>
+        <tr><td>Booklet margin</td><td class="strong">$6,000 / mo</td></tr>
+        <tr><td class="strong">Gross monthly</td><td class="strong gold">$89,000</td></tr>
+      </table>
+      <p class="mini" style="margin-top:8px;">Illustrative. Assumes 50 partners, 2,500 routed orders/month at $55 average subtotal, and 1,000 guides sold.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">08</span></div>
+</div>
+
+<!-- 9 GO TO MARKET -->
+<div class="slide">
+  <div class="kicker">08 · Go-To-Market</div>
+  <div class="rule"></div>
+  <h2>Start on Route 66. Expand by corridor.</h2>
+  <div class="grid4" style="margin-top:0.3in;">
+    <div class="card"><div class="tag">Phase 1 · Mo 1–3</div><h3 style="margin-top:10px;">Kingman pilot</h3><p>Medusa Farms anchor. 100-guide print run. Beta check-in at the counter and one live workshop.</p></div>
+    <div class="card"><div class="tag">Phase 2 · Mo 4–6</div><h3 style="margin-top:10px;">Western corridor</h3><p>5–10 partners across Kingman, Bullhead City, and Laughlin-adjacent traffic. Add delivery routing.</p></div>
+    <div class="card"><div class="tag">Phase 3 · Mo 7–9</div><h3 style="margin-top:10px;">Northern AZ</h3><p>Flagstaff, Prescott, Sedona. Tourism-heavy stops, event and workshop programming.</p></div>
+    <div class="card"><div class="tag">Phase 4 · Mo 10–18</div><h3 style="margin-top:10px;">Statewide</h3><p>Phoenix metro, Tucson, Yuma. 50+ partners, 5,000+ members, first regional expansion study.</p></div>
+  </div>
+  <div class="grid2" style="margin-top:0.28in;">
+    <div class="card">
+      <h3>Distribution</h3>
+      <ul>
+        <li>Partner counters and hotel concierge desks</li>
+        <li>Tourism centers, visitor bureaus, and Route 66 attractions</li>
+        <li>Events, workshops, and brand pop-ups</li>
+        <li>Direct mail to passport members before peak travel season</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Launch motion</h3>
+      <ul>
+        <li>Anchor deal with Medusa Farms as proof of concept</li>
+        <li>Free 90-day pilot for the next 3 partners</li>
+        <li>Publish pilot results as the sales deck</li>
+        <li>Referral fee for partners who bring in other partners</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">09</span></div>
+</div>
+
+<!-- 10 MOAT -->
+<div class="slide">
+  <div class="kicker">09 · Why We Win</div>
+  <div class="rule"></div>
+  <h2>Distribution, not just software.</h2>
+  <div class="grid3" style="margin-top:0.3in;">
+    <div class="card"><h3 class="gold">Physical moat</h3><p>A printed, distributed passport with unique signed codes can't be cloned by an app competitor overnight.</p></div>
+    <div class="card"><h3 class="gold">Shared network</h3><p>One passport works across competing stores — that's the reason a traveler installs it and the reason stores join.</p></div>
+    <div class="card"><h3 class="gold">Order routing data</h3><p>Every routed order improves our map of real demand and inventory, which makes placement more valuable each month.</p></div>
+    <div class="card"><h3 class="gold">Compliance-native</h3><p>21+ gates, no in-app cannabis payments, aggregate-only reporting, and ad review built in from day one.</p></div>
+    <div class="card"><h3 class="gold">Tourism positioning</h3><p>"Super Highways" owns a story no dispensary chain can claim: the Arizona road trip.</p></div>
+    <div class="card"><h3 class="gold">Local trust</h3><p>Launching with a respected Kingman operator gives us credibility with the next 50 partners.</p></div>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">10</span></div>
+</div>
+
+<!-- 11 TRACTION / PILOT -->
+<div class="slide">
+  <div class="kicker">10 · Status &amp; Pilot Plan</div>
+  <div class="rule"></div>
+  <h2>Prototype complete. Pilot next.</h2>
+  <div class="grid2" style="margin-top:0.28in;">
+    <div class="card goldb">
+      <h3>Done</h3>
+      <ul>
+        <li>Interactive app prototype (map, check-in, menu, cart, feed, events)</li>
+        <li>Print-ready pocket passport PDF</li>
+        <li>Technical architecture and data models</li>
+        <li>Arizona tax engine + Dutchie routing reference code</li>
+        <li>Partner sponsorship agreement and tier structure</li>
+        <li>Medusa Farms demo model and listing content</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Next 90 days</h3>
+      <ul>
+        <li>Sign Medusa Farms as anchor partner</li>
+        <li>Print 100 pilot guides</li>
+        <li>Run a 6-week check-in beta with real customers</li>
+        <li>Onboard 3–5 additional Kingman-area partners</li>
+        <li>Connect a live Dutchie sandbox store</li>
+        <li>Publish pilot metrics and open the seed round</li>
+      </ul>
+    </div>
+  </div>
+  <div class="grid4" style="margin-top:0.26in;">
+    <div class="card" style="text-align:center;"><div class="big gold">6 wk</div><p class="stat">Pilot length</p></div>
+    <div class="card" style="text-align:center;"><div class="big gold">100</div><p class="stat">Guides printed</p></div>
+    <div class="card" style="text-align:center;"><div class="big gold">5</div><p class="stat">Target partners</p></div>
+    <div class="card" style="text-align:center;"><div class="big gold">1</div><p class="stat">Live Dutchie store</p></div>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">11</span></div>
+</div>
+
+<!-- 12 FINANCIALS -->
+<div class="slide">
+  <div class="kicker">11 · Financial Projections</div>
+  <div class="rule"></div>
+  <h2>Conservative, sponsorship-led.</h2>
+  <table style="margin-top:0.2in;">
+    <tr><th>Year</th><th>Partners</th><th>Members</th><th>Revenue</th><th>Expenses</th><th>Net</th><th>Print runs</th></tr>
+    <tr><td class="strong">Year 1</td><td>50</td><td>5,000</td><td>$246K</td><td>$190K</td><td class="gold">+$56K</td><td>2</td></tr>
+    <tr><td class="strong">Year 2</td><td>150</td><td>25,000</td><td>$780K</td><td>$460K</td><td class="gold">+$320K</td><td>5</td></tr>
+    <tr><td class="strong">Year 3</td><td>300</td><td>75,000</td><td>$1.9M</td><td>$1.0M</td><td class="gold">+$900K</td><td>10</td></tr>
+  </table>
+  <div class="grid2" style="margin-top:0.3in;">
+    <div class="card">
+      <h3>Revenue mix at scale</h3>
+      <div class="mini" style="margin-top:8px;">Sponsorship · 65%</div>
+      <div class="bar"><div style="width:65%"></div></div>
+      <div class="mini" style="margin-top:10px;">Routing fees · 20%</div>
+      <div class="bar"><div style="width:20%"></div></div>
+      <div class="mini" style="margin-top:10px;">Booklet + events · 15%</div>
+      <div class="bar"><div style="width:15%"></div></div>
+    </div>
+    <div class="card">
+      <h3>Key assumptions</h3>
+      <ul>
+        <li>Average sponsorship grows from $1,500 to $1,900 with tier mix</li>
+        <li>Routing attach rate 20% of active members, $55 average order</li>
+        <li>Print cost declines 12% per run at volume</li>
+        <li>No outside capital required for Year 1 pilot</li>
+      </ul>
+    </div>
+  </div>
+  <p class="mini" style="margin-top:12px;">Illustrative projections for discussion. Validate with actual partner contracts.</p>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">12</span></div>
+</div>
+
+<!-- 13 COMPLIANCE -->
+<div class="slide">
+  <div class="kicker">12 · Compliance &amp; Trust</div>
+  <div class="rule"></div>
+  <h2>Built for ADHS from day one.</h2>
+  <div class="grid2" style="margin-top:0.28in;">
+    <div class="card">
+      <h3>Regulatory posture</h3>
+      <ul>
+        <li>21+ age gate in print, web, and app</li>
+        <li>No cannabis payment processing inside app-store wrappers</li>
+        <li>All advertising reviewed against Arizona cannabis marketing rules</li>
+        <li>Partner license verification before listing</li>
+        <li>No medical claims; education-first content</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Data &amp; security</h3>
+      <ul>
+        <li>Age/ID verification via a third-party provider</li>
+        <li>Signal-style end-to-end encryption for member messaging</li>
+        <li>Aggregate-only reporting to partners — no member PII</li>
+        <li>Signed, single-location QR codes to prevent fraud</li>
+        <li>Audit logging for redemptions and routed orders</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card goldb" style="margin-top:0.26in;">
+    <p style="font-size:13pt;color:#f8fafc;"><b class="gold">Positioning:</b> Arizona Super Highways is a directory, loyalty, and discovery platform — not a retailer. Orders route to licensed partners, and payment happens in their compliant flow.</p>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">13</span></div>
+</div>
+
+<!-- 14 ASK -->
+<div class="slide">
+  <div class="kicker">13 · The Ask</div>
+  <div class="rule"></div>
+  <h2>$250K seed to prove the corridor.</h2>
+  <div class="grid2" style="margin-top:0.26in;">
+    <div class="card">
+      <h3>Use of funds</h3>
+      <table>
+        <tr><td>Print run + design (10,000 guides)</td><td class="strong">$75K</td></tr>
+        <tr><td>App build-out + Dutchie integration</td><td class="strong">$95K</td></tr>
+        <tr><td>Launch marketing + distribution</td><td class="strong">$50K</td></tr>
+        <tr><td>Legal, compliance, working capital</td><td class="strong">$30K</td></tr>
+        <tr><td class="strong">Total</td><td class="strong gold">$250K</td></tr>
+      </table>
+    </div>
+    <div class="card goldb">
+      <h3>Milestones this round buys</h3>
+      <ul>
+        <li>Signed anchor + 10 paying partners</li>
+        <li>10,000 guides in market</li>
+        <li>2,000 activated passport members</li>
+        <li>Live Dutchie ordering in 3 stores</li>
+        <li>Pilot data set for the Series A story</li>
+        <li>Repeatable partner playbook for corridor 2</li>
+      </ul>
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:0.26in;">
+    <div class="card" style="text-align:center;"><div class="big gold">$250K</div><p class="stat">Seed round</p></div>
+    <div class="card" style="text-align:center;"><div class="big gold">18 mo</div><p class="stat">Runway</p></div>
+    <div class="card" style="text-align:center;"><div class="big gold">3×</div><p class="stat">Partner growth target</p></div>
+  </div>
+  <div class="foot"><span>Arizona Super Highways · Confidential</span><span class="num">14</span></div>
+</div>
+
+<!-- 15 CLOSE -->
+<div class="slide cover">
+  <div style="margin-top:0.5in;">
+    <div class="kicker">Let's build the highway</div>
+    <h1 style="margin-top:12px;">Every road trip<br>needs a passport.</h1>
+    <p class="sub2" style="margin-top:16px;">Launching with Medusa Farms in Kingman, Arizona.</p>
+    <div class="divider" style="width:5in;margin:24px 0;"></div>
+    <div class="grid3" style="max-width:9in;">
+      <div><p class="mini">PARTNERSHIPS</p><p class="gold" style="font-weight:700;">partners@arizona-super-highways.com</p></div>
+      <div><p class="mini">INVESTORS</p><p class="gold" style="font-weight:700;">invest@arizona-super-highways.com</p></div>
+      <div><p class="mini">DEMO MODEL</p><p class="gold" style="font-weight:700;">medusafarms.com</p></div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:0.55in;left:0.72in;right:0.72in;display:flex;justify-content:space-between;align-items:center;">
+    <p class="mini">Arizona Super Highways · Confidential · 21+ only</p>
+    <div class="badge">🐍</div>
+  </div>
+</div>
+
+</body>
+</html>

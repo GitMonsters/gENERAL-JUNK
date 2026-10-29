@@ -1,0 +1,499 @@
+/* Arizona Super Highways Flipbook Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #1C1C1C 0%, #6C3483 100%);
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.flipbook-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.flipbook-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.flipbook-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.flipbook-header h1 i {
+    color: #F39C12;
+}
+
+.flipbook-header p {
+    color: #FDF6E3;
+    opacity: 0.9;
+}
+
+.flipbook-viewer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.nav-btn {
+    background: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.25rem;
+    color: #1C1C1C;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: all 0.3s;
+}
+
+.nav-btn:hover {
+    background: #F39C12;
+    color: white;
+    transform: scale(1.1);
+}
+
+.book {
+    width: 375px;
+    height: 550px;
+    position: relative;
+    perspective: 1000px;
+}
+
+.page {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background: white;
+    border: 2px solid #ddd;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.page-content {
+    padding: 1.5rem;
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* Cover Page */
+.cover {
+    background: linear-gradient(135deg, #1C1C1C 0%, #6C3483 50%, #D35400 100%);
+    color: white;
+    text-align: center;
+}
+
+.cover .page-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.cover-logo {
+    font-size: 3rem;
+    color: #F39C12;
+    margin-bottom: 1rem;
+}
+
+.cover h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.cover h2 {
+    font-size: 1.25rem;
+    color: #F39C12;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.cover-tagline {
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+}
+
+.cover-qr {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.cover-qr p {
+    font-size: 0.7rem;
+    margin-top: 0.25rem;
+}
+
+.cover-url {
+    margin-top: 2rem;
+    font-weight: 600;
+}
+
+/* Back Cover */
+.back {
+    background: linear-gradient(135deg, #6C3483 0%, #1C1C1C 100%);
+}
+
+.back h2 {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.app-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.badge {
+    background: white;
+    color: black;
+    padding: 0.75rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.badge i {
+    font-size: 2rem;
+}
+
+.badge small {
+    display: block;
+    font-size: 0.7rem;
+}
+
+.badge strong {
+    display: block;
+    font-size: 1rem;
+}
+
+.back-info {
+    margin-bottom: 1.5rem;
+}
+
+.back-info p {
+    margin-bottom: 0.5rem;
+}
+
+.back-qr {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.back-qr p {
+    font-size: 0.7rem;
+}
+
+.disclaimer {
+    font-size: 0.7rem;
+    margin-top: 2rem;
+    opacity: 0.8;
+}
+
+/* Regular Pages */
+.page-title {
+    font-size: 1.25rem;
+    color: #D35400;
+    margin-bottom: 1rem;
+    text-align: center;
+    border-bottom: 3px solid #F39C12;
+    padding-bottom: 0.5rem;
+}
+
+/* Instructions */
+.instruction {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    align-items: flex-start;
+}
+
+.step-num {
+    background: linear-gradient(135deg, #D35400, #F39C12);
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-content h3 {
+    color: #1C1C1C;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.step-content p {
+    color: #333;
+    font-size: 0.8rem;
+}
+
+.notice {
+    background: #FDF6E3;
+    padding: 0.75rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 1.5rem;
+    border: 2px solid #F39C12;
+}
+
+.notice p {
+    font-size: 0.8rem;
+}
+
+/* Featured Page */
+.featured-badge {
+    background: linear-gradient(135deg, #F39C12, #D35400);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.location-type {
+    color: #6C3483;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.location-info p {
+    margin-bottom: 0.4rem;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+}
+
+.location-info i {
+    color: #D35400;
+    width: 15px;
+    margin-top: 0.1rem;
+}
+
+.specials-box {
+    background: linear-gradient(135deg, #FDF6E3, #fff);
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin: 0.75rem 0;
+    border-left: 3px solid #27AE60;
+}
+
+.specials-box h3 {
+    color: #27AE60;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+}
+
+.specials-box ul {
+    list-style: none;
+}
+
+.specials-box li {
+    font-size: 0.75rem;
+    padding: 0.15rem 0;
+}
+
+.passport-perk {
+    background: #f4ecf7;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 2px solid #6C3483;
+    margin-bottom: 0.75rem;
+}
+
+.passport-perk h4 {
+    color: #6C3483;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.passport-perk p {
+    font-size: 0.75rem;
+}
+
+.page-qr {
+    text-align: center;
+    font-size: 2rem;
+    color: #D35400;
+}
+
+.page-qr p {
+    font-size: 0.7rem;
+    color: #1C1C1C;
+    margin-top: 0.25rem;
+}
+
+/* Tiers */
+.tier {
+    padding: 0.5rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.tier h3 {
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.2rem;
+}
+
+.tier-req {
+    font-size: 0.7rem;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+}
+
+.tier ul {
+    list-style: none;
+    margin-left: 0.5rem;
+}
+
+.tier li {
+    font-size: 0.7rem;
+    padding: 0.1rem 0;
+}
+
+.tier.bronze {
+    background: #f8f9fa;
+    border-left: 3px solid #CD7F32;
+}
+
+.tier.bronze h3 {
+    color: #CD7F32;
+}
+
+.tier.silver {
+    background: #f8f9fa;
+    border-left: 3px solid #C0C0C0;
+}
+
+.tier.silver h3 {
+    color: #808080;
+}
+
+.tier.gold {
+    background: #fff9e6;
+    border-left: 3px solid #FFD700;
+}
+
+.tier.gold h3 {
+    color: #B8860B;
+}
+
+.tier.platinum {
+    background: #f0f0f0;
+    border-left: 3px solid #E5E4E2;
+}
+
+.tier.platinum h3 {
+    color: #708090;
+}
+
+.tier.medusa {
+    background: #f4ecf7;
+    border-left: 3px solid #6C3483;
+}
+
+.tier.medusa h3 {
+    color: #6C3483;
+}
+
+/* Controls */
+.flipbook-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.flipbook-controls button {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid white;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s;
+}
+
+.flipbook-controls button:hover {
+    background: white;
+    color: #1C1C1C;
+}
+
+.demo-note {
+    text-align: center;
+    color: #FDF6E3;
+    background: rgba(243, 156, 18, 0.2);
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+    
+    .flipbook-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .flipbook-viewer {
+        flex-direction: column;
+    }
+    
+    .nav-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .book {
+        width: 320px;
+        height: 470px;
+    }
+    
+    .page-content {
+        padding: 1rem;
+    }
+}

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arizona Super Highways - Dispensary Passport</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-route"></i>
+                <span>Arizona Super Highways</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item"><a href="#home" class="nav-link active">Home</a></li>
+                <li class="nav-item"><a href="#map" class="nav-link">Map</a></li>
+                <li class="nav-item"><a href="#passport" class="nav-link">Passport</a></li>
+                <li class="nav-item"><a href="#rewards" class="nav-link">Rewards</a></li>
+                <li class="nav-item"><a href="#feed" class="nav-link">Feed</a></li>
+                <li class="nav-item"><a href="#profile" class="nav-link">Profile</a></li>
+                <li class="nav-item"><button class="nav-btn" onclick="openScanner()">Scan QR</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Home Section -->
+    <section id="home" class="section active">
+        <div class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">Arizona Super Highways</h1>
+                <p class="hero-subtitle">Your Dispensary Passport & Rewards Guide</p>
+                <p class="hero-desc">Check in at participating locations, earn stamps, unlock exclusive drops, deals & swag</p>
+                <div class="hero-actions">
+                    <button class="btn btn-primary" onclick="showSection('map')">
+                        <i class="fas fa-map-marked-alt"></i> Find Locations
+                    </button>
+                    <button class="btn btn-secondary" onclick="openScanner()">
+                        <i class="fas fa-qrcode"></i> Scan to Check In
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="featured-location">
+                <div class="featured-badge">FEATURED DEMO LOCATION</div>
+                <div class="featured-card">
+                    <div class="featured-image">
+                        <img src="https://medusafarms.com/wp-content/uploads/2021/01/Medusa-Coin-Rev-1.png" alt="Medusa Farms">
+                    </div>
+                    <div class="featured-info">
+                        <h2>Medusa Farms</h2>
+                        <p class="featured-type">Recreational & Medical Cannabis</p>
+                        <p class="featured-address"><i class="fas fa-map-marker-alt"></i> 3490 N Bank Street, Kingman, AZ 86409</p>
+                        <p class="featured-hours"><i class="fas fa-clock"></i> Daily 8 AM - 9 PM</p>
+                        <p class="featured-phone"><i class="fas fa-phone"></i> (928) 421-0020</p>
+                        <div class="featured-specials">
+                            <h3>Everyday Savings</h3>
+                            <ul>
+                                <li>$13 - 3.5g flower</li>
+                                <li>$44 - 14g flower</li>
+                                <li>$80 - 28g flower</li>
+                                <li>$15 - 1g concentrates</li>
+                            </ul>
+                        </div>
+                        <div class="featured-actions">
+                            <button class="btn btn-primary" onclick="viewLocation('medusa')">View Location</button>
+                            <button class="btn btn-success" onclick="checkInDemo('medusa')">
+                                <i class="fas fa-stamp"></i> Check In Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <i class="fas fa-map-pin"></i>
+                    <h3>150+</h3>
+                    <p>Participating Locations</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-stamp"></i>
+                    <h3>25K+</h3>
+                    <p>Passport Stamps</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-gift"></i>
+                    <h3>500+</h3>
+                    <p>Exclusive Drops</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <h3>10K+</h3>
+                    <p>Active Members</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section id="map" class="section">
+        <div class="container">
+            <h2 class="section-title">Live Map</h2>
+            <p class="section-subtitle">Find participating dispensaries, events, and wellness locations near you</p>
+            <div class="map-controls">
+                <button class="map-filter active" data-filter="all">All</button>
+                <button class="map-filter" data-filter="dispensary">Dispensaries</button>
+                <button class="map-filter" data-filter="brand">Brands</button>
+                <button class="map-filter" data-filter="event">Events</button>
+                <button class="map-filter" data-filter="wellness">Wellness</button>
+            </div>
+            <div id="mapContainer" class="map-container"></div>
+        </div>
+    </section>
+
+    <!-- Passport Section -->
+    <section id="passport" class="section">
+        <div class="container">
+            <h2 class="section-title">My Passport</h2>
+            <div class="passport-header">
+                <div class="passport-user">
+                    <div class="passport-avatar">DM</div>
+                    <div class="passport-info">
+                        <h3>Demo Member</h3>
+                        <p class="passport-tier gold"><i class="fas fa-crown"></i> Gold Tier</p>
+                        <p class="passport-points">1,247 Points</p>
+                    </div>
+                </div>
+                <div class="passport-progress">
+                    <p>Progress to Platinum (253 pts to go)</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 83%"></div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="stamps-title">Passport Stamps</h3>
+            <div class="stamps-grid">
+                <div class="stamp-card collected">
+                    <div class="stamp-icon"><i class="fas fa-stamp"></i></div>
+                    <h4>Medusa Farms</h4>
+                    <p>Kingman, AZ</p>
+                    <span class="stamp-date">Oct 20, 2026</span>
+                </div>
+                <div class="stamp-card">
+                    <div class="stamp-icon"><i class="fas fa-plus"></i></div>
+                    <h4>Collect More</h4>
+                    <p>Scan QR to stamp</p>
+                </div>
+                <div class="stamp-card">
+                    <div class="stamp-icon"><i class="fas fa-plus"></i></div>
+                    <h4>Collect More</h4>
+                    <p>Scan QR to stamp</p>
+                </div>
+                <div class="stamp-card">
+                    <div class="stamp-icon"><i class="fas fa-plus"></i></div>
+                    <h4>Collect More</h4>
+                    <p>Scan QR to stamp</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rewards Section -->
+    <section id="rewards" class="section">
+        <div class="container">
+            <h2 class="section-title">Rewards & Offers</h2>
+            <p class="section-subtitle">Exclusive deals, drops, and swag for passport members</p>
+            <div class="rewards-grid">
+                <div class="reward-card exclusive">
+                    <div class="reward-badge">EXCLUSIVE DROP</div>
+                    <h3>Medusa Reserve - Hidden Drop</h3>
+                    <p>Limited edition small batch, Gold+ only</p>
+                    <div class="reward-meta">
+                        <span><i class="fas fa-lock"></i> Gold Required</span>
+                        <span><i class="fas fa-clock"></i> Expires Soon</span>
+                    </div>
+                    <button class="btn btn-primary btn-full">Claim Drop</button>
+                </div>
+                <div class="reward-card">
+                    <h3>Check-In Bonus</h3>
+                    <p>Double points on your next 3 check-ins</p>
+                    <div class="reward-meta">
+                        <span><i class="fas fa-star"></i> 200 Points</span>
+                    </div>
+                    <button class="btn btn-secondary btn-full">Redeem</button>
+                </div>
+                <div class="reward-card">
+                    <h3>Arizona Super Highways Swag</h3>
+                    <p>T-Shirt or hat - Platinum members</p>
+                    <div class="reward-meta">
+                        <span><i class="fas fa-gem"></i> Platinum</span>
+                        <span><i class="fas fa-box"></i> Limited Qty</span>
+                    </div>
+                    <button class="btn btn-secondary btn-full">View Details</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feed Section -->
+    <section id="feed" class="section">
+        <div class="container">
+            <h2 class="section-title">Community Feed</h2>
+            <p class="section-subtitle">Photos, reviews, and check-ins from the #MedusaFam</p>
+            <div class="feed-post">
+                <div class="post-header">
+                    <div class="post-avatar">MF</div>
+                    <div class="post-info">
+                        <h4>MedusaFam_42</h4>
+                        <p>Checked in at <strong>Medusa Farms</strong> • 2 hours ago</p>
+                    </div>
+                </div>
+                <div class="post-content">
+                    <p>Love the new location! The Ganja Guides are always so helpful. Scored some fire flower today 🔥</p>
+                    <div class="post-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <div class="post-actions">
+                    <button><i class="fas fa-heart"></i> 24</button>
+                    <button><i class="fas fa-comment"></i> 3</button>
+                    <button><i class="fas fa-share"></i> Share</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Profile Section -->
+    <section id="profile" class="section">
+        <div class="container">
+            <h2 class="section-title">My Profile</h2>
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar-large">DM</div>
+                    <h3>Demo Member</h3>
+                    <p class="profile-tier gold"><i class="fas fa-crown"></i> Gold Tier Member</p>
+                </div>
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <h4>7</h4>
+                        <p>Stamps</p>
+                    </div>
+                    <div class="profile-stat">
+                        <h4>1,247</h4>
+                        <p>Points</p>
+                    </div>
+                    <div class="profile-stat">
+                        <h4>12</h4>
+                        <p>Reviews</p>
+                    </div>
+                </div>
+                <div class="profile-menu">
+                    <button class="profile-menu-item"><i class="fas fa-wallet"></i> My Wallet</button>
+                    <button class="profile-menu-item"><i class="fas fa-envelope"></i> Messages <span class="badge">3</span></button>
+                    <button class="profile-menu-item"><i class="fas fa-video"></i> Live Events</button>
+                    <button class="profile-menu-item"><i class="fas fa-cog"></i> Settings</button>
+                    <button class="profile-menu-item"><i class="fas fa-question-circle"></i> Help & Support</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QR Scanner Modal -->
+    <div id="scannerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Scan QR Code</h3>
+                <button class="modal-close" onclick="closeScanner()">&times;</button>
+            </div>
+            <div class="scanner-body">
+                <div class="scanner-viewport">
+                    <i class="fas fa-qrcode scanner-icon"></i>
+                    <p>Point camera at location QR code</p>
+                    <p class="scanner-demo">[DEMO MODE - Simulated Scan]</p>
+                </div>
+                <button class="btn btn-success btn-full" onclick="simulateCheckIn()">
+                    <i class="fas fa-check"></i> Simulate Check-In at Medusa Farms
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Modal -->
+    <div id="locationModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="locationModalTitle">Location Details</h3>
+                <button class="modal-close" onclick="closeLocationModal()">&times;</button>
+            </div>
+            <div class="location-modal-body">
+                <div class="location-hero">
+                    <img src="https://medusafarms.com/wp-content/uploads/2021/01/Medusa-Coin-Rev-1.png" alt="Medusa Farms">
+                </div>
+                <div class="location-details">
+                    <p><strong><i class="fas fa-map-marker-alt"></i> Address:</strong> 3490 N Bank Street, Kingman, AZ 86409</p>
+                    <p><strong><i class="fas fa-phone"></i> Phone:</strong> (928) 421-0020</p>
+                    <p><strong><i class="fas fa-globe"></i> Website:</strong> <a href="https://www.medusafarms.com" target="_blank">medusafarms.com</a></p>
+                    <p><strong><i class="fas fa-clock"></i> Hours:</strong> Daily 8 AM - 9 PM</p>
+                    
+                    <h4>Current Specials</h4>
+                    <ul class="specials-list">
+                        <li>$13 - 3.5g flower (select strains)</li>
+                        <li>$44 - 14g flower (select strains)</li>
+                        <li>$80 - 28g flower (select strains)</li>
+                        <li>$15 - 1g concentrates</li>
+                    </ul>
+                    
+                    <h4>Passport Perks</h4>
+                    <div class="perk-box">
+                        <i class="fas fa-gift"></i>
+                        <div>
+                            <strong>Check-In Reward</strong>
+                            <p>+50 points on first check-in, +25 points on returns</p>
+                        </div>
+                    </div>
+                    
+                    <div class="location-modal-actions">
+                        <button class="btn btn-primary" onclick="checkInDemo('medusa')"><i class="fas fa-stamp"></i> Check In</button>
+                        <button class="btn btn-secondary"><i class="fas fa-shopping-cart"></i> View Menu</button>
+                        <button class="btn btn-secondary"><i class="fas fa-route"></i> Get Directions</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

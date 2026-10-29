@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Arizona Super Highways — Pocket Passport (Print Prototype)</title>
+<style>
+  @page { size: 3.75in 5.25in; margin: 0; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body { font-family:"Segoe UI", Arial, sans-serif; color:#1c1c1c; background:#555; }
+  .page {
+    width:3.75in; height:5.25in; position:relative; overflow:hidden;
+    page-break-after:always; break-after:page; background:#FDF6E3;
+  }
+  .page:last-child { page-break-after:auto; break-after:auto; }
+  .pad { padding:0.22in; height:100%; display:flex; flex-direction:column; }
+  .gold { color:#B8860B; }
+  .orange { color:#D35400; }
+  .purple { color:#6C3483; }
+  .green { color:#1E8449; }
+  .rule { height:2px; background:#D35400; margin:4px 0 6px; }
+  h1 { font-size:17pt; line-height:1.05; letter-spacing:.01em; }
+  h2 { font-size:11pt; text-transform:uppercase; letter-spacing:.12em; }
+  h3 { font-size:8.5pt; text-transform:uppercase; letter-spacing:.08em; }
+  p, li { font-size:6.6pt; line-height:1.38; }
+  small { font-size:5.4pt; line-height:1.35; display:block; }
+  .kicker { font-size:5.6pt; letter-spacing:.22em; text-transform:uppercase; opacity:.75; }
+
+  /* ---------- COVER ---------- */
+  .cover { background:linear-gradient(155deg,#1C1C1C 0%,#3b1f4d 46%,#6C3483 72%,#D35400 100%); color:#FDF6E3; }
+  .cover .pad { justify-content:space-between; }
+  .sun { width:0.9in; height:0.9in; border-radius:50%; background:radial-gradient(circle,#F7DC6F,#F39C12 62%,#D35400);
+         display:flex; align-items:center; justify-content:center; font-size:22pt; box-shadow:0 0 22px rgba(243,156,18,.55); }
+  .cover h1 { font-size:22pt; font-weight:800; letter-spacing:-.01em; }
+  .cover .sub { font-size:9pt; letter-spacing:.3em; color:#F39C12; font-weight:700; margin-top:2px; }
+  .cover .tag { font-size:6pt; letter-spacing:.18em; margin-top:6px; opacity:.85; }
+  .qrbox { background:#FDF6E3; padding:6px 6px 4px; border-radius:6px; width:1.05in; text-align:center; }
+  .qrbox img { width:0.92in; height:0.92in; display:block; }
+  .qrbox span { font-size:4.6pt; color:#1C1C1C; font-weight:700; letter-spacing:.06em; }
+  .cover .foot { font-size:5.2pt; letter-spacing:.12em; opacity:.8; }
+  .badge21 { display:inline-block; border:1px solid rgba(253,246,227,.5); border-radius:20px; padding:2px 7px; font-size:4.8pt; letter-spacing:.12em; }
+
+  /* ---------- GENERIC ---------- */
+  .hdr { display:flex; align-items:flex-end; justify-content:space-between; border-bottom:2px solid #D35400; padding-bottom:3px; margin-bottom:6px; }
+  .hdr .num { font-size:5.2pt; color:#8a7a5c; letter-spacing:.1em; }
+  .box { border:1px solid #e2d5b6; border-radius:5px; padding:5px; background:#fffdf6; }
+  .box.tint { background:#fff7e6; border-color:#e8cf9a; }
+  .box.purple { background:#f6eef9; border-color:#d7bde2; }
+  .box.green { background:#eafaf0; border-color:#bfe6cd; }
+  .row { display:flex; gap:5px; }
+  .col { flex:1; }
+  .mt4{margin-top:4px}.mt6{margin-top:6px}.mt8{margin-top:8px}
+  ul { padding-left:9px; }
+  li { margin-bottom:1.5px; }
+  .step { display:flex; gap:5px; margin-bottom:5px; align-items:flex-start; }
+  .step .n { min-width:14px; height:14px; border-radius:50%; background:#D35400; color:#fff; font-size:6pt; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .tierline { display:flex; justify-content:space-between; align-items:center; padding:2.5px 4px; border-radius:3px; font-size:5.8pt; margin-bottom:2px; }
+  .tierline b { font-size:6pt; }
+  .t1{background:#f6f1e7;border-left:3px solid #CD7F32}
+  .t2{background:#f2f2f2;border-left:3px solid #A6A6A6}
+  .t3{background:#fff6d9;border-left:3px solid #D4AF37}
+  .t4{background:#eef1f4;border-left:3px solid #8896A6}
+  .t5{background:#f3e8f7;border-left:3px solid #6C3483}
+  .listing { border-bottom:1px dashed #d8c9a8; padding:5px 0; }
+  .listing:last-child { border-bottom:none; }
+  .listing h3 { color:#1C1C1C; font-size:7.6pt; letter-spacing:.02em; }
+  .listing .meta { font-size:5.2pt; color:#5b5344; line-height:1.35; }
+  .tag { display:inline-block; font-size:4.4pt; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:1px 4px; border-radius:8px; background:#6C3483; color:#fff; }
+  .tag.gold{background:#D4AF37;color:#3b2a00}
+  .tag.green{background:#1E8449}
+  .perk { background:#6C3483; color:#FDF6E3; border-radius:4px; padding:3.5px 5px; font-size:5.4pt; }
+  .big { font-size:15pt; font-weight:800; line-height:1; }
+  .center { text-align:center; }
+  .footer { margin-top:auto; display:flex; justify-content:space-between; align-items:center; font-size:4.6pt; color:#8a7a5c; border-top:1px solid #e2d5b6; padding-top:3px; }
+  .stampgrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; }
+  .stamp { aspect-ratio:1; border:1px dashed #c9b98f; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:4.4pt; color:#a08f68; text-align:center; padding:2px; }
+  .stamp.on { border:1px solid #1E8449; color:#1E8449; font-weight:700; background:#eafaf0; }
+  .mapwrap { background:#f0e6cc; border-radius:5px; padding:4px; }
+  .pulse { width:5px; height:5px; border-radius:50%; background:#D35400; display:inline-block; }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 — COVER ============ -->
+<div class="page cover">
+  <div class="pad">
+    <div>
+      <div class="kicker">Arizona · Est. 2026</div>
+      <div class="sun">🐍</div>
+    </div>
+    <div>
+      <h1>Arizona<br>Super<br>Highways</h1>
+      <div class="sub">PASSPORT</div>
+      <div class="tag">DISPENSARY DIRECTORY · REWARDS · ROUTE 66</div>
+    </div>
+    <div style="display:flex; align-items:flex-end; justify-content:space-between;">
+      <div class="qrbox">
+        <img src="../../assets/qr/join.svg" alt="Join QR">
+        <span>SCAN TO JOIN</span>
+      </div>
+      <div style="text-align:right;">
+        <div class="badge21">21+ ONLY</div>
+        <div class="foot" style="margin-top:6px;">arizona-super-<br>highways.com</div>
+        <div class="foot" style="margin-top:3px;">DEMO PROTOTYPE</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 2 — HOW IT WORKS ============ -->
+<div class="page">
+  <div class="pad">
+    <div class="hdr"><h2>How It Works</h2><span class="num">02</span></div>
+
+    <div class="step"><div class="n">1</div><div><h3>Scan In</h3><p>Find the QR code in this guide or at the counter. Scan with the app.</p></div></div>
+    <div class="step"><div class="n">2</div><div><h3>Stamp Your Passport</h3><p>Every check-in adds a stamp and points to your wallet.</p></div></div>
+    <div class="step"><div class="n">3</div><div><h3>Unlock Deals</h3><p>Specials, tiered discounts, swag and hidden product drops.</p></div></div>
+    <div class="step"><div class="n">4</div><div><h3>Level Up</h3><p>The more highways you travel, the deeper the perks get.</p></div></div>
+
+    <div class="hdr mt6"><h2>Tier Benefits</h2><span class="num">05</span></div>
+    <div class="tierline t1"><b>BRONZE</b><span>0–249 pts · member pricing</span></div>
+    <div class="tierline t2"><b>SILVER</b><span>250+ · +5% &amp; early access</span></div>
+    <div class="tierline t3"><b>GOLD</b><span>500+ · +10% &amp; drops</span></div>
+    <div class="tierline t4"><b>PLATINUM</b><span>1,000+ · +15% &amp; priority</span></div>
+    <div class="tierline t5"><b>MEDUSA</b><span>2,000+ · +20% &amp; VIP</span></div>
+
+    <div class="box mt6">
+      <h3 class="purple">Points, Simply</h3>
+      <ul>
+        <li>Check in at a new stop — <b>+50 pts</b></li>
+        <li>Return check-in — <b>+10 pts</b></li>
+        <li>Verified review with photo — <b>+25 pts</b></li>
+        <li>Attend a workshop or live event — <b>+40 pts</b></li>
+      </ul>
+    </div>
+
+    <div class="perk mt6">PASSPORT PERK: complete 5 stops and unlock the Route 66 limited drop.</div>
+
+    <div class="footer"><span>21+ only · Valid ID required</span><span>02</span></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 3 — MEDUSA FEATURE ============ -->
+<div class="page">
+  <div class="pad">
+    <div class="hdr"><h2 class="orange">Featured Stop</h2><span class="num">03</span></div>
+
+    <div style="display:flex; gap:6px; align-items:center;">
+      <div style="width:0.72in;height:0.72in;border-radius:50%;background:#fff;border:2px solid #D4AF37;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        <img src="https://medusafarms.com/wp-content/uploads/2021/01/Medusa-Coin-Rev-1.png" style="width:0.66in;height:0.66in;object-fit:contain;" alt="Medusa Farms">
+      </div>
+      <div>
+        <h1 style="font-size:13pt;">Medusa Farms</h1>
+        <p class="purple" style="font-weight:700;">Recreational &amp; Medical Cannabis</p>
+        <div><span class="tag gold">Passport Partner</span> <span class="tag green">Dutchie</span></div>
+      </div>
+    </div>
+
+    <div class="box mt6">
+      <p>📍 3490 N Bank Street, Kingman, AZ 86409</p>
+      <p>📞 (928) 421-0020</p>
+      <p>🕗 Open daily · 8 AM – 9 PM</p>
+      <p>🌐 medusafarms.com</p>
+    </div>
+
+    <div class="box tint mt6">
+      <h3 class="orange">Everyday Savings</h3>
+      <div class="row">
+        <div class="col"><p><b>$13</b> · 3.5g flower</p><p><b>$44</b> · 14g flower</p></div>
+        <div class="col"><p><b>$80</b> · 28g flower</p><p><b>$15</b> · 1g concentrates</p></div>
+      </div>
+      <small>*select strains · while supplies last</small>
+    </div>
+
+    <div class="perk mt6">CHECK-IN PERK: +50 bonus points on your first visit. Ask for a Ganja Guide.</div>
+
+    <div class="row mt6" style="align-items:center;">
+      <div class="col">
+        <div style="border:2px dashed #6C3483;border-radius:6px;height:0.72in;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;">
+          <span style="font-size:5pt;letter-spacing:.14em;color:#6C3483;font-weight:700;">PHYSICAL INK STAMP</span>
+          <span style="font-size:4.4pt;color:#a08f68;margin-top:2px;">place stamp here</span>
+        </div>
+        <p style="font-size:4.6pt;color:#8a7a5c;margin-top:3px;text-align:center;">Valid with any purchase · one stamp per visit</p>
+      </div>
+      <div class="qrbox" style="background:#fff;border:1px solid #e2d5b6;">
+        <img src="../../assets/qr/medusa-checkin.svg" alt="Medusa check-in QR">
+        <span>SCAN TO CHECK IN</span>
+      </div>
+    </div>
+
+    <div class="footer"><span>Demo model location</span><span>03</span></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 4 — NORTHERN DIRECTORY ============ -->
+<div class="page">
+  <div class="pad">
+    <div class="hdr"><h2>Northern Arizona</h2><span class="num">04</span></div>
+    <p style="margin-bottom:5px;">Kingman · Flagstaff · Prescott · Route 66 corridor</p>
+
+    <div class="listing">
+      <div style="display:flex;justify-content:space-between;"><h3>Medusa Farms</h3><span class="tag gold">Featured</span></div>
+      <div class="meta">3490 N Bank St, Kingman · (928) 421-0020<br>Daily 8a–9p · Rec + Med · Delivery</div>
+      <div class="perk mt4">+50 pts first check-in · Medusa Monday deals</div>
+    </div>
+
+    <div class="listing">
+      <div style="display:flex;justify-content:space-between;"><h3>High Desert Cannabis</h3><span class="tag">Dispensary</span></div>
+      <div class="meta">1200 S Milton Rd, Flagstaff · Daily 9a–8p<br>2 for $40 pre-rolls · Silver+ perk</div>
+    </div>
+
+    <div class="listing">
+      <div style="display:flex;justify-content:space-between;"><h3>Route 66 Botanicals</h3><span class="tag green">Wellness</span></div>
+      <div class="meta">812 E Beale St, Kingman · Tue–Sat 10a–6p<br>Free wellness consult for members</div>
+    </div>
+
+    <div class="listing">
+      <div style="display:flex;justify-content:space-between;"><h3>Prescott Valley Supply</h3><span class="tag">Dispensary</span></div>
+      <div class="meta">3050 N Glassford Hill Rd, Prescott Valley<br>Daily 8a–9p · Delivery available</div>
+    </div>
+
+    <div class="box purple mt6">
+      <h3 class="purple">Road Trip Tip</h3>
+      <p>Three stops along I-40 within 90 minutes. Check in at all three for the “Highway Hauler” badge and a 15% stackable coupon.</p>
+    </div>
+
+    <div class="footer"><span>Participating locations · demo listings</span><span>04</span></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 5 — CENTRAL / SOUTHERN ============ -->
+<div class="page">
+  <div class="pad">
+    <div class="hdr"><h2>Central &amp; Southern</h2><span class="num">05</span></div>
+    <p style="margin-bottom:5px;">Phoenix Metro · Tucson · Yuma</p>
+
+    <div class="listing">
+      <div style="display:flex;justify-content:space-between;"><h3>Sonoran Wellness Co.</h3><span class="tag green">Wellness</span></div>
+      <div class="meta">Phoenix · Mon–Sat 9a–7p<br>CBD sampling · terpene education nights</div>
+    </div>
+
+    <div class="listing">
+      <div style="display:flex;justify-content:space-between;"><h3>Old Pueblo Dispensary</h3><span class="tag">Dispensary</span></div>
+      <div class="meta">Tucson · Daily 8a–10p · Delivery<br>$20 shatter grams · double stamps Tuesdays</div>
+    </div>
+
+    <div class="listing">
+      <div style="display:flex;justify-content:space-between;"><h3>Colorado River Botanicals</h3><span class="tag">Dispensary</span></div>
+      <div class="meta">Yuma · Daily 9a–8p<br>Tourist welcome kit · $25 half grams</div>
+    </div>
+
+    <div class="listing">
+      <div style="display:flex;justify-content:space-between;"><h3>Mesa Compassion Center</h3><span class="tag">Medical</span></div>
+      <div class="meta">Mesa · Mon–Fri 9a–6p<br>Renewal support · caregiver consultations</div>
+    </div>
+
+    <div class="listing">
+      <div style="display:flex;justify-content:space-between;"><h3>Tucson Treatment Collective</h3><span class="tag">Treatment</span></div>
+      <div class="meta">Tucson · By appointment<br>Members receive 20% off partner events</div>
+    </div>
+
+    <div class="mapwrap mt6">
+      <div style="display:flex;justify-content:space-between;font-size:5.2pt;color:#5b5344;">
+        <span><span class="pulse"></span> Kingman</span><span><span class="pulse"></span> Flagstaff</span>
+        <span><span class="pulse"></span> Phoenix</span><span><span class="pulse"></span> Tucson</span><span><span class="pulse"></span> Yuma</span>
+      </div>
+      <p class="center" style="margin-top:3px;font-size:4.8pt;">Live interactive map in the app · arizona-super-highways.com/map</p>
+    </div>
+
+    <div class="footer"><span>Central &amp; Southern districts</span><span>05</span></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 6 — BRANDS / EVENTS ============ -->
+<div class="page">
+  <div class="pad">
+    <div class="hdr"><h2>Brands &amp; Events</h2><span class="num">06</span></div>
+
+    <div class="box">
+      <h3 class="orange">Brand Spotlight</h3>
+      <p><b>Gorgon Gardens</b> — small-batch AZ flower, exclusive to passport stops. Look for the serpent seal.</p>
+      <p class="mt4"><b>Desert Distillate Co.</b> — live resin &amp; solventless drops, limited monthly runs.</p>
+      <p class="mt4"><b>Sun Flare Edibles</b> — low-dose, terpene-matched gummies for daytime.</p>
+    </div>
+
+    <h3 class="purple mt6">Upcoming Events</h3>
+    <div class="listing" style="padding-top:3px;">
+      <p><b>Oct 24 · Cannabis 101</b> — Medusa Farms, Kingman · 2 PM</p>
+      <p class="meta">Beginner-friendly workshop · +40 pts · live stream in app</p>
+    </div>
+    <div class="listing">
+      <p><b>Oct 25 · Grow Like a Pro</b> — High Desert, Flagstaff · 11 AM</p>
+      <p class="meta">Cultivation basics with Q&amp;A · members only</p>
+    </div>
+    <div class="listing">
+      <p><b>Oct 30 · Wellness &amp; Terpenes</b> — Sonoran Wellness, Phoenix · 6 PM</p>
+      <p class="meta">Education night · free consult for Silver+</p>
+    </div>
+
+    <div class="box purple mt6">
+      <h3 class="purple">Host With Us</h3>
+      <p>Workshops, brand launches, live drops and wellness sessions. Reach passport members across Arizona.</p>
+      <p class="mt4"><b>partners@arizona-super-highways.com</b></p>
+    </div>
+
+    <div class="footer"><span>Events calendar updates weekly in-app</span><span>06</span></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 7 — REWARDS + STAMPS ============ -->
+<div class="page">
+  <div class="pad">
+    <div class="hdr"><h2>Rewards &amp; Drops</h2><span class="num">07</span></div>
+
+    <div class="row">
+      <div class="col box tint">
+        <h3 class="orange">Member Deals</h3>
+        <ul>
+          <li>10% off first order</li>
+          <li>Double points Tuesdays</li>
+          <li>Birthday pre-roll</li>
+          <li>Free swag at Platinum</li>
+        </ul>
+      </div>
+      <div class="col box purple">
+        <h3 class="purple">Hidden Drops</h3>
+        <ul>
+          <li>Diamond Sauce · Gold+</li>
+          <li>AZ Sun Flare · Silver+</li>
+          <li>Medusa Reserve · Platinum</li>
+          <li>Route 66 Drop · 5 stamps</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="mt6">Your Stamp Card</h3>
+    <div class="stampgrid mt4">
+      <div class="stamp on">MEDUSA<br>KINGMAN</div>
+      <div class="stamp on">OLD PUEBLO<br>TUCSON</div>
+      <div class="stamp">SCAN TO<br>COLLECT</div>
+      <div class="stamp">SCAN TO<br>COLLECT</div>
+      <div class="stamp">SCAN TO<br>COLLECT</div>
+      <div class="stamp">SCAN TO<br>COLLECT</div>
+      <div class="stamp">SCAN TO<br>COLLECT</div>
+      <div class="stamp">SCAN TO<br>COLLECT</div>
+      <div class="stamp">SCAN TO<br>COLLECT</div>
+    </div>
+
+    <div class="box green mt6">
+      <h3 class="green">Redeem In 3 Steps</h3>
+      <p>1 · Open your wallet in the app. 2 · Tap the offer. 3 · Show the rotating code at the register.</p>
+    </div>
+
+    <p class="center mt6" style="font-size:5pt;color:#8a7a5c;">Offers subject to change. One redemption per member per visit.<br>Cannot be combined unless marked stackable.</p>
+
+    <div class="footer"><span>Rewards wallet · app required</span><span>07</span></div>
+  </div>
+</div>
+
+<!-- ============ PAGE 8 — BACK COVER ============ -->
+<div class="page cover">
+  <div class="pad" style="justify-content:space-between;">
+    <div>
+      <div class="kicker">The Road to Rewards</div>
+      <h1 style="font-size:16pt;margin-top:3px;">Every road trip<br>needs a passport.</h1>
+    </div>
+
+    <div class="center">
+      <div class="qrbox" style="margin:0 auto;background:#FDF6E3;width:1.15in;">
+        <img src="../../assets/qr/digital-guide.svg" style="width:1in;height:1in;" alt="Digital guide QR">
+        <span>SCAN FOR DIGITAL GUIDE</span>
+      </div>
+    </div>
+
+    <div>
+      <div style="display:flex;gap:5px;margin-bottom:6px;">
+        <div class="box" style="flex:1;background:rgba(253,246,227,.1);border-color:rgba(253,246,227,.25);">
+          <p style="font-size:5.4pt;">📱 <b>App Store</b><br>Download the app</p>
+        </div>
+        <div class="box" style="flex:1;background:rgba(253,246,227,.1);border-color:rgba(253,246,227,.25);">
+          <p style="font-size:5.4pt;">🤖 <b>Google Play</b><br>Download the app</p>
+        </div>
+      </div>
+      <p style="font-size:5.6pt;">arizona-super-highways.com<br>#ArizonaSuperHighways · #MedusaFam</p>
+      <p class="mt4" style="font-size:4.6pt;opacity:.75;">© 2026 Arizona Super Highways. 21+ only. Keep out of reach of children. Do not drive under the influence. This is a design prototype; listings are illustrative.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

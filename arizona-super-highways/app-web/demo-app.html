@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Arizona Super Highways — App Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', sans-serif; background:#020617; color:#f8fafc; -webkit-font-smoothing:antialiased; }
+  .medusa-gold { color:#d4af37; }
+  .medusa-bg-gold { background-color:#d4af37; }
+  .glass { background:rgba(30,41,59,.72); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.08); }
+  .gold-ring { box-shadow:0 0 0 1px rgba(212,175,55,.35), 0 10px 40px -10px rgba(212,175,55,.35); }
+  .no-scrollbar::-webkit-scrollbar { display:none; }
+  .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px);} to {opacity:1; transform:translateY(0);} }
+  .fade-up { animation:fadeUp .35s ease-out both; }
+  @keyframes pulseLive { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  .live-dot { animation:pulseLive 1.4s infinite; }
+  @keyframes scanline { 0%{top:8%;} 100%{top:92%;} }
+  .scanline { animation:scanline 2.2s ease-in-out infinite alternate; }
+  @keyframes shimmer { 0%{background-position:-200% 0;} 100%{background-position:200% 0;} }
+  .shimmer { background:linear-gradient(90deg,rgba(212,175,55,.1) 25%,rgba(212,175,55,.4) 50%,rgba(212,175,55,.1) 75%); background-size:200% 100%; animation:shimmer 1.6s infinite; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ------------------------------------------------------------------ */
+/*  DEMO DATA                                                          */
+/* ------------------------------------------------------------------ */
+const MEDUSA_LOGO = "https://medusafarms.com/wp-content/uploads/2021/01/Medusa-Coin-Rev-1.png";
+
+const TIERS = [
+  { name: "Bronze",   min: 0,    perks: ["Member pricing", "Passport stamps"] },
+  { name: "Silver",   min: 250,  perks: ["+5% discount", "Early access"] },
+  { name: "Gold",     min: 500,  perks: ["+10% discount", "Exclusive offers", "Hidden drops"] },
+  { name: "Platinum", min: 1000, perks: ["+15% discount", "Priority drops", "VIP events"] },
+  { name: "Medusa",   min: 2000, perks: ["+20% discount", "VIP swag", "Ultimate access"] },
+];
+const tierFor = (pts) => [...TIERS].reverse().find(t => pts >= t.min) || TIERS[0];
+const nextTier = (pts) => TIERS.find(t => t.min > pts) || null;
+
+const LOCATIONS = [
+  { id:"medusa", name:"Medusa Farms", type:"dispensary", city:"Kingman, AZ", address:"3490 N Bank St, Kingman, AZ 86409", phone:"(928) 421-0020", hours:"Daily 8 AM – 9 PM", dist:0.8, open:true, x:18, y:24, logo:MEDUSA_LOGO,
+    perk:"+50 bonus points on first check-in", specials:["$13 – 3.5g flower","$44 – 14g flower","$80 – 28g flower","$15 – 1g concentrates"], dutchie:true, delivery:true },
+  { id:"flag", name:"High Desert Cannabis", type:"dispensary", city:"Flagstaff, AZ", dist:12.4, open:true, x:46, y:27, emoji:"🏔️", perk:"10% off for Silver+", specials:["2 for $40 pre-rolls"], dutchie:true, delivery:false },
+  { id:"phx",  name:"Sonoran Wellness Co.", type:"wellness", city:"Phoenix, AZ", dist:24.1, open:true, x:50, y:52, emoji:"🌵", perk:"Free wellness consult", specials:["CBD sampling"], dutchie:false, delivery:false },
+  { id:"tuc",  name:"Old Pueblo Dispensary", type:"dispensary", city:"Tucson, AZ", dist:48.7, open:true, x:56, y:72, emoji:"🌄", perk:"Double stamps Tuesdays", specials:["$20 shatter grams"], dutchie:true, delivery:true },
+  { id:"yuma", name:"Colorado River Botanicals", type:"dispensary", city:"Yuma, AZ", dist:66.2, open:false, x:17, y:80, emoji:"🏜️", perk:"Tourist welcome kit", specials:["$25 half grams"], dutchie:true, delivery:false },
+];
+
+const DROPS = [
+  { id:"d1", name:"Diamond Sauce", sub:"Limited Drop · 120 units", emoji:"💎", tier:"Gold", qty:12 },
+  { id:"d2", name:"AZ Sun Flare", sub:"Passport Exclusive", emoji:"🌿", tier:"Silver", qty:40 },
+  { id:"d3", name:"Medusa Reserve", sub:"Hidden Drop · In-store only", emoji:"🐍", tier:"Platinum", qty:6 },
+];
+
+const EVENTS = [
+  { id:"e1", title:"Cannabis 101 Workshop", host:"Medusa Farms · Kingman", when:"Sat 2:00 PM", live:true,  emoji:"🎓" },
+  { id:"e2", title:"Grow Like a Pro", host:"High Desert · Flagstaff", when:"Sun 11:00 AM", live:false, emoji:"🌱" },
+  { id:"e3", title:"Wellness & Terpenes", host:"Sonoran Wellness · Phoenix", when:"Oct 30 · 6 PM", live:false, emoji:"🧘" },
+];
+
+const FEED = [
+  { id:"f1", user:"MedusaFam_42", initials:"MF", loc:"Medusa Farms", time:"2h ago", text:"Love the new location! The Ganja Guides are always so helpful. Scored some fire flower today 🔥", rating:5, likes:24, comments:3, verified:true },
+  { id:"f2", user:"DesertRoadTripper", initials:"DR", loc:"High Desert Cannabis", time:"5h ago", text:"Passport stop #4 on the Route 66 run. The check-in perk is legit — 50 points just for walking in.", rating:4, likes:11, comments:1, verified:true },
+  { id:"f3", user:"AZ_TerpeneChaser", initials:"AT", loc:"Old Pueblo Dispensary", time:"Yesterday", text:"Review: Old Pueblo's $20 shatter grams are the best value in Tucson right now. Smooth pull, clean melt.", rating:5, likes:38, comments:7, verified:true },
+];
+
+const THREADS = [
+  { id:"t1", name:"Medusa Farms", initials:"MF", last:"Your Diamond Sauce reservation is confirmed 🐍", time:"2m", unread:2, business:true },
+  { id:"t2", name:"High Desert Events", initials:"HD", last:"Workshop seats for Sunday are almost gone.", time:"1h", unread:0, business:true },
+  { id:"t3", name:"Ganja Guide Jess", initials:"GJ", last:"Saved you a menu — ask for me at the counter!", time:"3h", unread:1, business:false },
+];
+
+const MENU = [
+  { id:"m1", name:"Medusa OG Flower", cat:"Flower", price:13, size:"3.5g", thc:"24.8%", emoji:"🌿" },
+  { id:"m2", name:"Desert Diesel", cat:"Flower", price:44, size:"14g", thc:"26.1%", emoji:"🌵" },
+  { id:"m3", name:"Gorgon Glue", cat:"Flower", price:80, size:"28g", thc:"23.4%", emoji:"🐍" },
+  { id:"m4", name:"Snake Oil Live Resin", cat:"Concentrates", price:15, size:"1g", thc:"78.2%", emoji:"💧" },
+  { id:"m5", name:"Stone Cold Gummies", cat:"Edibles", price:18, size:"100mg", thc:"10mg/pc", emoji:"🍬" },
+  { id:"m6", name:"Medusa Reserve", cat:"Exclusive", price:65, size:"3.5g", thc:"29.9%", emoji:"💎", locked:"Platinum" },
+];
+
+/* ------------------------------------------------------------------ */
+/*  SMALL COMPONENTS                                                   */
+/* ------------------------------------------------------------------ */
+const Toast = ({ toast }) => toast ? (
+  <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] w-[88%] max-w-sm fade-up">
+    <div className="glass gold-ring rounded-2xl px-4 py-3 flex items-center gap-3">
+      <span className="text-2xl">{toast.icon}</span>
+      <div className="min-w-0">
+        <p className="text-sm font-bold leading-tight">{toast.title}</p>
+        <p className="text-xs text-slate-400 leading-tight truncate">{toast.msg}</p>
+      </div>
+    </div>
+  </div>
+) : null;
+
+const Sheet = ({ open, onClose, children, title }) => open ? (
+  <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+    <div className="w-full max-w-md glass rounded-t-3xl p-5 pb-8 max-h-[88vh] overflow-y-auto no-scrollbar fade-up" onClick={e => e.stopPropagation()}>
+      <div className="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mb-4" />
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold">{title}</h3>
+        <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-800 text-slate-300">✕</button>
+      </div>
+      {children}
+    </div>
+  </div>
+) : null;
+
+const Pill = ({ children, className="" }) => (
+  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${className}`}>{children}</span>
+);
+
+const Stars = ({ n }) => (
+  <div className="text-xs medusa-gold tracking-tight">{"★".repeat(n)}<span className="text-slate-600">{"★".repeat(5-n)}</span></div>
+);
+
+/* ------------------------------------------------------------------ */
+/*  APP                                                                */
+/* ------------------------------------------------------------------ */
+const App = () => {
+  const [view, setView] = useState('home');
+  const [points, setPoints] = useState(1240);
+  const [stamps, setStamps] = useState(['medusa','tuc']);
+  const [toast, setToast] = useState(null);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [locOpen, setLocOpen] = useState(null);
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [claimed, setClaimed] = useState([]);
+  const [liked, setLiked] = useState([]);
+  const [liveOpen, setLiveOpen] = useState(null);
+  const [thread, setThread] = useState(null);
+  const [chat, setChat] = useState([
+    { from:'them', text:"Welcome back! Your Diamond Sauce reservation is confirmed 🐍" },
+    { from:'them', text:"Pick up at the Kingman counter — ask for Jess. 🔒 end-to-end encrypted" },
+  ]);
+  const [chatInput, setChatInput] = useState('');
+
+  const tier = tierFor(points);
+  const next = nextTier(points);
+
+  const notify = (title, msg, icon='✅') => {
+    setToast({ title, msg, icon });
+    setTimeout(() => setToast(null), 3200);
+  };
+
+  const checkIn = (loc) => {
+    if (stamps.includes(loc.id)) {
+      setPoints(p => p + 10);
+      notify('Welcome back!', `+10 points at ${loc.name}`, '🔁');
+    } else {
+      setStamps(s => [...s, loc.id]);
+      setPoints(p => p + 50);
+      notify('Check-in unlocked!', `+50 points · stamp added for ${loc.name}`, '🎫');
+    }
+    setScanOpen(false); setLocOpen(null);
+  };
+
+  const addToCart = (item) => {
+    if (item.locked && points < 1000) {
+      notify('Tier locked', `${item.name} unlocks at Platinum (1,000 pts)`, '🔒');
+      return;
+    }
+    setCart(c => {
+      const found = c.find(x => x.id === item.id);
+      return found ? c.map(x => x.id === item.id ? {...x, qty:x.qty+1} : x) : [...c, {...item, qty:1}];
+    });
+    notify('Added to cart', `${item.name} · ${item.size}`, '🛒');
+  };
+
+  const claimDrop = (drop) => {
+    if (claimed.includes(drop.id)) return;
+    const gate = TIERS.findIndex(t => t.name === drop.tier);
+    const mine = TIERS.findIndex(t => t.name === tier.name);
+    if (mine < gate) { notify('Tier locked', `${drop.name} requires ${drop.tier}`, '🔒'); return; }
+    setClaimed(c => [...c, drop.id]);
+    notify('Drop claimed!', `${drop.name} reserved in your wallet`, '💎');
+  };
+
+  /* ---------------- NAV ---------------- */
+  const Nav = () => {
+    const Item = ({ id, icon, label }) => (
+      <button onClick={() => setView(id)} className="flex flex-col items-center gap-1 w-14">
+        <span className={`text-xl transition ${view===id ? 'medusa-gold scale-110' : 'text-slate-500'}`}>{icon}</span>
+        <span className={`text-[9px] font-semibold ${view===id ? 'medusa-gold' : 'text-slate-600'}`}>{label}</span>
+      </button>
+    );
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="max-w-md mx-auto glass border-t border-white/10 px-4 pt-2 pb-[max(10px,env(safe-area-inset-bottom))] flex justify-between items-center">
+          <Item id="home" icon="🏠" label="Home" />
+          <Item id="map" icon="📍" label="Map" />
+          <button onClick={() => setScanOpen(true)} className="w-14 h-14 -mt-7 rounded-full medusa-bg-gold text-slate-900 text-2xl shadow-lg shadow-yellow-500/30 flex items-center justify-center border-4 border-slate-950">⛶</button>
+          <Item id="passport" icon="🎫" label="Passport" />
+          <Item id="social" icon="💬" label="Social" />
+        </div>
+      </nav>
+    );
+  };
+
+  /* ---------------- HOME ---------------- */
+  const Home = () => (
+    <div className="p-5 pb-32 fade-up max-w-md mx-auto">
+      <header className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-extrabold leading-none">Arizona</h1>
+          <h2 className="text-[13px] medusa-gold tracking-[.28em] font-semibold">SUPER HIGHWAYS</h2>
+          <p className="text-[10px] text-slate-500 mt-1">THE ROAD TO REWARDS</p>
+        </div>
+        <button onClick={() => setView('profile')} className="w-11 h-11 rounded-full medusa-bg-gold flex items-center justify-center text-slate-900 font-bold ring-2 ring-yellow-200/30">JD</button>
+      </header>
+
+      {/* Tier */}
+      <div className="glass rounded-3xl p-5 mb-5 relative overflow-hidden gold-ring">
+        <div className="relative z-10">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-[10px] uppercase tracking-widest text-slate-400 mb-1">Current Loyalty Tier</h3>
+              <p className="text-3xl font-extrabold leading-none">{tier.name} <span className="text-base font-medium text-slate-400">Member</span></p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-extrabold medusa-gold leading-none">{points.toLocaleString()}</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">Points</p>
+            </div>
+          </div>
+          <div className="w-full bg-slate-700/60 h-2 rounded-full overflow-hidden mt-4">
+            <div className="h-full medusa-bg-gold rounded-full transition-all duration-700" style={{ width: next ? `${Math.min(100, ((points - tier.min)/(next.min - tier.min))*100)}%` : '100%' }} />
+          </div>
+          <p className="text-[11px] mt-2 text-slate-400">
+            {next ? `${next.min - points} points to ${next.name} Tier` : 'Top tier reached — Medusa status 👑'}
+          </p>
+        </div>
+        <div className="absolute top-0 right-0 -mr-8 -mt-8 w-36 h-36 bg-yellow-500 opacity-10 rounded-full blur-3xl" />
+      </div>
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-4 gap-2 mb-6">
+        {[
+          ['⛶','Scan', () => setScanOpen(true)],
+          ['🛒','Order', () => setOrderOpen(true)],
+          ['💎','Drops', () => setView('rewards')],
+          ['📺','Live', () => setView('events')],
+        ].map(([icon,label,fn]) => (
+          <button key={label} onClick={fn} className="glass rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-95 transition">
+            <span className="text-xl">{icon}</span>
+            <span className="text-[10px] font-semibold text-slate-300">{label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Featured */}
+      <section className="mb-6">
+        <div className="flex items-end justify-between mb-3">
+          <h4 className="text-sm font-bold uppercase tracking-wider text-slate-300">Featured Dispensary</h4>
+          <span className="text-[10px] medusa-gold font-bold">DEMO MODEL</span>
+        </div>
+        <div className="glass rounded-3xl overflow-hidden gold-ring">
+          <div className="h-44 relative bg-gradient-to-br from-purple-900/60 via-slate-900 to-amber-900/40 flex items-center justify-center overflow-hidden">
+            <img src={MEDUSA_LOGO} alt="Medusa Farms" className="h-32 w-32 object-contain drop-shadow-[0_0_25px_rgba(212,175,55,.35)]"
+                 onError={e => { e.currentTarget.style.display='none'; }} />
+            <div className="absolute top-3 left-3 flex gap-2">
+              <Pill className="bg-green-500/20 text-green-400">Open Now</Pill>
+              <Pill className="bg-yellow-500/20 medusa-gold">★ Partner</Pill>
+            </div>
+            <div className="absolute bottom-3 right-3 text-[10px] text-slate-300 bg-black/40 px-2 py-1 rounded">Kingman, AZ</div>
+          </div>
+          <div className="p-4">
+            <div className="flex justify-between items-start mb-1">
+              <div>
+                <h5 className="text-xl font-bold leading-tight">Medusa Farms</h5>
+                <p className="text-[11px] text-slate-400">Recreational & Medical · 0.8 mi away</p>
+              </div>
+              <Stars n={5} />
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2 mb-3">Excellent cannabis paired with genuine hospitality. Everyday savings: $13 / 3.5g flower · $80 / oz.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setLocOpen(LOCATIONS[0])} className="flex-1 bg-slate-800 text-slate-100 text-sm font-semibold py-3 rounded-xl active:scale-95 transition">Details</button>
+              <button onClick={() => setOrderOpen(true)} className="flex-1 medusa-bg-gold text-slate-900 text-sm font-bold py-3 rounded-xl active:scale-95 transition">Order Delivery</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Drops */}
+      <section className="mb-6">
+        <div className="flex items-end justify-between mb-3">
+          <h4 className="text-sm font-bold uppercase tracking-wider text-slate-300">Exclusive Drops</h4>
+          <button onClick={() => setView('rewards')} className="text-[10px] medusa-gold font-bold">SEE ALL →</button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1">
+          {DROPS.map(d => {
+            const locked = TIERS.findIndex(t=>t.name===d.tier) > TIERS.findIndex(t=>t.name===tier.name);
+            return (
+              <button key={d.id} onClick={() => claimDrop(d)} className={`glass rounded-2xl p-3 min-w-[140px] text-left active:scale-95 transition ${locked ? 'opacity-70' : ''}`}>
+                <div className="w-full h-24 rounded-xl bg-slate-800/80 mb-2 flex items-center justify-center text-4xl relative">
+                  {d.emoji}
+                  {locked && <span className="absolute top-1 right-1 text-xs">🔒</span>}
+                  {claimed.includes(d.id) && <span className="absolute top-1 right-1 text-xs">✅</span>}
+                </div>
+                <p className="text-xs font-bold leading-tight">{d.name}</p>
+                <p className="text-[10px] medusa-gold mt-0.5">{d.sub}</p>
+                <p className="text-[9px] text-slate-500 mt-1">{d.qty} left · {d.tier}+</p>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Live events */}
+      <section className="mb-6">
+        <div className="flex items-end justify-between mb-3">
+          <h4 className="text-sm font-bold uppercase tracking-wider text-slate-300">Happening Now</h4>
+          <button onClick={() => setView('events')} className="text-[10px] medusa-gold font-bold">EVENTS →</button>
+        </div>
+        <button onClick={() => { setLiveOpen(EVENTS[0]); }} className="w-full glass rounded-2xl p-3 flex items-center gap-3 text-left active:scale-[.99] transition">
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-800 to-slate-900 flex items-center justify-center text-2xl">📺</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-[9px] font-bold text-rose-400"><span className="w-1.5 h-1.5 rounded-full bg-rose-500 live-dot"/>LIVE</span>
+              <span className="text-[10px] text-slate-500">· {EVENTS[0].when}</span>
+            </div>
+            <p className="text-sm font-semibold truncate">{EVENTS[0].title}</p>
+            <p className="text-[10px] text-slate-400 truncate">{EVENTS[0].host}</p>
+          </div>
+          <span className="medusa-gold text-lg">›</span>
+        </button>
+      </section>
+
+      {/* Nearby */}
+      <section>
+        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3">Nearby Passport Stops</h4>
+        <div className="space-y-2">
+          {LOCATIONS.filter(l => l.id !== 'medusa').slice(0,3).map(l => (
+            <button key={l.id} onClick={() => setLocOpen(l)} className="w-full glass rounded-2xl p-3 flex items-center gap-3 text-left active:scale-[.99] transition">
+              <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-xl">{l.emoji}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate">{l.name}</p>
+                <p className="text-[10px] text-slate-400">{l.city} · {l.dist} mi</p>
+              </div>
+              {stamps.includes(l.id) ? <span className="text-xs">✅</span> : <span className="text-[10px] text-slate-500">{l.perk}</span>}
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+
+  /* ---------------- MAP ---------------- */
+  const MapView = () => {
+    const [q, setQ] = useState('');
+    const [sel, setSel] = useState('medusa');
+    const list = LOCATIONS.filter(l => (l.name + l.city).toLowerCase().includes(q.toLowerCase()));
+    const selected = LOCATIONS.find(l => l.id === sel) || LOCATIONS[0];
+    return (
+      <div className="relative h-screen max-w-md mx-auto overflow-hidden bg-slate-950">
+        {/* Stylized AZ map */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,#1e293b_0%,#020617_70%)]">
+          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full opacity-60" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="az" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#334155" stopOpacity=".9"/>
+                <stop offset="100%" stopColor="#0f172a" stopOpacity=".9"/>
+              </linearGradient>
+            </defs>
+            <path d="M20,8 L78,8 L78,60 L83,60 L83,74 L70,82 L61,93 L30,93 L23,85 L18,70 L20,40 Z"
+                  fill="url(#az)" stroke="rgba(212,175,55,.35)" strokeWidth=".6"/>
+            <path d="M20,8 L78,8 L78,60 L83,60 L83,74 L70,82 L61,93 L30,93 L23,85 L18,70 L20,40 Z"
+                  fill="none" stroke="rgba(212,175,55,.15)" strokeWidth="3"/>
+            <path d="M18,52 L83,52" stroke="rgba(255,255,255,.05)" strokeWidth=".4"/>
+            <path d="M50,8 L50,93" stroke="rgba(255,255,255,.05)" strokeWidth=".4"/>
+          </svg>
+          {list.map(l => (
+            <button key={l.id} onClick={() => setSel(l.id)} style={{ left:`${l.x}%`, top:`${l.y}%` }}
+              className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group`}>
+              <span className={`w-9 h-9 rounded-full flex items-center justify-center text-sm border-2 transition ${sel===l.id ? 'medusa-bg-gold border-yellow-200 scale-110 text-slate-900' : 'bg-slate-800 border-slate-600 text-white'}`}>
+                {l.id === 'medusa' ? (l.emoji || '🐍') : l.emoji}
+              </span>
+              <span className="text-[9px] mt-1 px-1.5 py-0.5 rounded bg-black/50 text-slate-200 whitespace-nowrap">{l.name.split(' ')[0]}</span>
+              {stamps.includes(l.id) && <span className="text-[9px]">✅</span>}
+            </button>
+          ))}
+        </div>
+
+        <div className="absolute top-5 left-4 right-4">
+          <div className="glass rounded-full px-4 py-3 flex items-center gap-2">
+            <span className="text-slate-400">🔍</span>
+            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search locations, brands, events..." className="bg-transparent outline-none text-sm w-full placeholder-slate-500" />
+          </div>
+          <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar">
+            {['All','Dispensaries','Wellness','Events','Delivery'].map((f,i)=>(
+              <span key={f} className={`text-[10px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap ${i===0?'medusa-bg-gold text-slate-900':'glass text-slate-300'}`}>{f}</span>
+            ))}
+          </div>
+        </div>
+
+        <div className="absolute bottom-24 left-4 right-4">
+          <div className="glass rounded-2xl p-3 flex gap-3 mb-2">
+            <div className="w-16 h-16 rounded-xl bg-slate-800 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+              {selected.logo ? <img src={selected.logo} alt="" className="w-14 h-14 object-contain" onError={e=>{e.currentTarget.style.display='none'}}/> : selected.emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-sm truncate">{selected.name}</p>
+                {selected.open ? <Pill className="bg-green-500/20 text-green-400">Open</Pill> : <Pill className="bg-slate-600/30 text-slate-400">Closed</Pill>}
+              </div>
+              <p className="text-[10px] text-slate-400">{selected.city} · {selected.dist} mi</p>
+              <div className="flex gap-2 mt-2">
+                <button onClick={()=>setLocOpen(selected)} className="text-[10px] font-bold medusa-gold">DETAILS →</button>
+                {selected.dutchie && <button onClick={()=>setOrderOpen(true)} className="text-[10px] font-bold text-green-400">ORDER →</button>}
+              </div>
+            </div>
+          </div>
+          <p className="text-center text-[9px] text-slate-600">Stylized demo map · {list.length} participating stops</p>
+        </div>
+      </div>
+    );
+  };
+
+  /* ---------------- PASSPORT ---------------- */
+  const PassportView = () => {
+    const slots = Math.max(8, stamps.length);
+    return (
+      <div className="p-5 pb-32 max-w-md mx-auto fade-up">
+        <h2 className="text-2xl font-extrabold">My Passport</h2>
+        <p className="text-slate-400 text-xs mb-5">Scan QR codes at participating locations to unlock rewards.</p>
+
+        <div className="glass rounded-3xl p-4 mb-5 flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full medusa-bg-gold flex items-center justify-center text-slate-900 font-extrabold text-lg">JD</div>
+          <div className="flex-1">
+            <p className="font-bold text-sm">Jordan Doe</p>
+            <p className="text-[11px] medusa-gold font-semibold">{tier.name} Tier · {points.toLocaleString()} pts</p>
+            <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mt-2">
+              <div className="h-full medusa-bg-gold" style={{width: next ? `${Math.min(100,((points-tier.min)/(next.min-tier.min))*100)}%` : '100%'}}/>
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-extrabold medusa-gold leading-none">{stamps.length}</p>
+            <p className="text-[9px] text-slate-500 uppercase">Stamps</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          {Array.from({length: slots}).map((_, i) => {
+            const loc = LOCATIONS[i];
+            const unlocked = loc && stamps.includes(loc.id);
+            return (
+              <button key={i} onClick={() => loc && !unlocked && setScanOpen(true)}
+                className={`aspect-square rounded-3xl flex flex-col items-center justify-center border-2 border-dashed transition active:scale-95 ${unlocked ? 'border-yellow-500 bg-yellow-500/5' : 'border-slate-700'}`}>
+                {unlocked ? (
+                  <>
+                    <div className="text-3xl mb-1">{loc.logo ? <img src={loc.logo} className="w-12 h-12 object-contain" alt="" onError={e=>{e.currentTarget.style.display='none'}}/> : '✅'}</div>
+                    <p className="text-[10px] font-bold medusa-gold text-center px-1 leading-tight">{loc.name}</p>
+                    <p className="text-[8px] text-slate-500 mt-1">STAMPED</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-3xl mb-2 opacity-20">🔒</div>
+                    <p className="text-[9px] text-slate-500">{loc ? 'TAP TO SCAN' : 'LOCKED'}</p>
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="glass rounded-2xl p-4 mt-5">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">Tier benefits</h4>
+          <ul className="space-y-1">
+            {tier.perks.map(p => <li key={p} className="text-[11px] text-slate-400 flex gap-2"><span className="medusa-gold">✦</span>{p}</li>)}
+          </ul>
+        </div>
+
+        <button onClick={() => setScanOpen(true)} className="fixed bottom-28 right-6 w-16 h-16 rounded-full medusa-bg-gold text-slate-900 text-2xl shadow-xl shadow-yellow-500/20 flex items-center justify-center active:scale-95 transition">⛶</button>
+      </div>
+    );
+  };
+
+  /* ---------------- REWARDS ---------------- */
+  const RewardsView = () => (
+    <div className="p-5 pb-32 max-w-md mx-auto fade-up">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-2xl font-extrabold">Rewards</h2>
+          <p className="text-xs text-slate-400">Specials, offers, swag & hidden drops</p>
+        </div>
+        <button onClick={() => setView('home')} className="text-xs text-slate-400">✕</button>
+      </div>
+
+      <div className="glass rounded-2xl p-4 mb-4 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-slate-500">Wallet balance</p>
+          <p className="text-xl font-extrabold medusa-gold">{points.toLocaleString()} pts</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] uppercase tracking-widest text-slate-500">Tier</p>
+          <p className="text-sm font-bold">{tier.name}</p>
+        </div>
+      </div>
+
+      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Exclusive drops</h4>
+      <div className="space-y-3 mb-5">
+        {DROPS.map(d => {
+          const locked = TIERS.findIndex(t=>t.name===d.tier) > TIERS.findIndex(t=>t.name===tier.name);
+          const done = claimed.includes(d.id);
+          return (
+            <div key={d.id} className="glass rounded-2xl p-3 flex gap-3 items-center">
+              <div className="w-14 h-14 rounded-xl bg-slate-800 flex items-center justify-center text-2xl">{d.emoji}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold">{d.name}</p>
+                <p className="text-[10px] medusa-gold">{d.sub}</p>
+                <p className="text-[9px] text-slate-500 mt-0.5">{d.qty} units left · {d.tier}+ required</p>
+              </div>
+              <button disabled={locked || done} onClick={() => claimDrop(d)}
+                className={`text-[10px] font-bold px-3 py-2 rounded-lg ${done ? 'bg-green-500/20 text-green-400' : locked ? 'bg-slate-800 text-slate-500' : 'medusa-bg-gold text-slate-900'}`}>
+                {done ? 'CLAIMED' : locked ? '🔒 LOCKED' : 'CLAIM'}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Member offers</h4>
+      <div className="space-y-3">
+        {[
+          ['Check-in Bonus','Double points on next 3 visits','200 pts','🔄'],
+          ['Arizona Super Highways Swag','Tee or hat · Platinum members','1,000 pts','👕'],
+          ['Medusa Monday','15% off select flower · Gold+','0 pts','🐍'],
+          ['Birthday Gram','Free pre-roll on your birthday','0 pts','🎂'],
+        ].map(([t,s,c,e],i)=>(
+          <div key={i} className="glass rounded-2xl p-3 flex gap-3 items-center">
+            <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center text-xl">{e}</div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold">{t}</p>
+              <p className="text-[10px] text-slate-400">{s}</p>
+            </div>
+            <span className="text-[10px] medusa-gold font-bold">{c}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  /* ---------------- SOCIAL ---------------- */
+  const SocialView = () => (
+    <div className="p-5 pb-32 max-w-md mx-auto fade-up">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-2xl font-extrabold">Community</h2>
+          <p className="text-xs text-slate-400">#ArizonaSuperHighways · #MedusaFam</p>
+        </div>
+        <button onClick={() => notify('Camera ready','Post a check-in photo (demo)','📸')} className="w-9 h-9 rounded-full glass flex items-center justify-center">📸</button>
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        {['Feed','Reviews','Nearby'].map((f,i)=>(
+          <span key={f} className={`text-[11px] font-semibold px-3 py-1.5 rounded-full ${i===0?'medusa-bg-gold text-slate-900':'glass text-slate-300'}`}>{f}</span>
+        ))}
+      </div>
+
+      <div className="space-y-4">
+        {FEED.map(p => (
+          <div key={p.id} className="glass rounded-2xl p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-purple-700 flex items-center justify-center text-[11px] font-bold">{p.initials}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1">
+                  <p className="text-xs font-bold truncate">{p.user}</p>
+                  {p.verified && <span className="text-[9px] medusa-gold">✔</span>}
+                </div>
+                <p className="text-[9px] text-slate-500">Checked in at <span className="text-slate-300">{p.loc}</span> · {p.time}</p>
+              </div>
+            </div>
+            <p className="text-[12px] text-slate-200 leading-relaxed">{p.text}</p>
+            <div className="mt-2"><Stars n={p.rating}/></div>
+            <div className="flex gap-5 mt-3 pt-3 border-t border-white/5">
+              <button onClick={()=>setLiked(l=>l.includes(p.id)?l.filter(x=>x!==p.id):[...l,p.id])}
+                className={`text-[11px] flex items-center gap-1 ${liked.includes(p.id)?'text-rose-400':'text-slate-400'}`}>
+                {liked.includes(p.id)?'❤️':'🤍'} {p.likes + (liked.includes(p.id)?1:0)}
+              </button>
+              <button onClick={()=>notify('Comments','Comment threads are demo-only','💬')} className="text-[11px] text-slate-400">💬 {p.comments}</button>
+              <button onClick={()=>notify('Shared','Link copied to clipboard (demo)','🔗')} className="text-[11px] text-slate-400 ml-auto">↗ Share</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  /* ---------------- PROFILE ---------------- */
+  const ProfileView = () => (
+    <div className="p-5 pb-32 max-w-md mx-auto fade-up">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-extrabold">Profile</h2>
+        <button onClick={()=>setView('home')} className="text-xs text-slate-400">✕</button>
+      </div>
+      <div className="glass rounded-3xl overflow-hidden mb-4">
+        <div className="h-24 bg-gradient-to-r from-purple-900 via-slate-900 to-amber-900/60" />
+        <div className="px-5 pb-5 -mt-8">
+          <div className="w-16 h-16 rounded-full medusa-bg-gold flex items-center justify-center text-slate-900 font-extrabold text-xl border-4 border-slate-900">JD</div>
+          <p className="font-bold mt-2">Jordan Doe</p>
+          <p className="text-[11px] medusa-gold">{tier.name} Tier · Member since 2026</p>
+          <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+            {[[stamps.length,'Stamps'],[points.toLocaleString(),'Points'],[12,'Reviews']].map(([v,l])=>(
+              <div key={l} className="bg-slate-800/60 rounded-xl py-2">
+                <p className="font-extrabold text-sm">{v}</p>
+                <p className="text-[9px] text-slate-500 uppercase">{l}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="glass rounded-2xl overflow-hidden">
+        {[
+          ['🔐','Encrypted Messages','3 unread', ()=>setView('messages')],
+          ['📺','Live Events','1 live now', ()=>setView('events')],
+          ['💎','Rewards Wallet','', ()=>setView('rewards')],
+          ['🔔','Notifications','On', ()=>notify('Notifications','Drop alerts enabled','🔔')],
+          ['⚙️','Settings','', ()=>notify('Settings','Profile settings (demo)','⚙️')],
+          ['🤝','Become a Partner','List your business', ()=>notify('Partner program','Pitch deck & media kit available','🤝')],
+        ].map(([i,l,r,fn],idx)=>(
+          <button key={idx} onClick={fn} className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-white/5 last:border-0 text-left active:bg-white/5">
+            <span className="text-lg w-6">{i}</span>
+            <span className="flex-1 text-sm">{l}</span>
+            <span className="text-[10px] text-slate-500">{r}</span>
+            <span className="text-slate-600">›</span>
+          </button>
+        ))}
+      </div>
+      <p className="text-center text-[9px] text-slate-600 mt-4">Arizona Super Highways · Demo build · 21+ only</p>
+    </div>
+  );
+
+  /* ---------------- EVENTS ---------------- */
+  const EventsView = () => (
+    <div className="p-5 pb-32 max-w-md mx-auto fade-up">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-2xl font-extrabold">Events & Live</h2>
+          <p className="text-xs text-slate-400">Workshops · drops · community</p>
+        </div>
+        <button onClick={()=>setView('home')} className="text-xs text-slate-400">✕</button>
+      </div>
+      <div className="space-y-3">
+        {EVENTS.map(e=>(
+          <button key={e.id} onClick={()=>setLiveOpen(e)} className="w-full glass rounded-2xl p-4 flex gap-3 items-center text-left active:scale-[.99]">
+            <div className="w-14 h-14 rounded-xl bg-slate-800 flex items-center justify-center text-2xl">{e.emoji}</div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                {e.live && <span className="flex items-center gap-1 text-[9px] font-bold text-rose-400"><span className="w-1.5 h-1.5 rounded-full bg-rose-500 live-dot"/>LIVE</span>}
+                <span className="text-[10px] text-slate-500">{e.when}</span>
+              </div>
+              <p className="text-sm font-bold truncate">{e.title}</p>
+              <p className="text-[10px] text-slate-400 truncate">{e.host}</p>
+            </div>
+            <span className="medusa-gold">›</span>
+          </button>
+        ))}
+      </div>
+      <div className="glass rounded-2xl p-4 mt-4">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Host an event</h4>
+        <p className="text-[11px] text-slate-400 mb-3">Workshops, brand launches, wellness sessions and live drops — stream to passport members.</p>
+        <button onClick={()=>notify('Event request','Our team will follow up (demo)','📅')} className="w-full medusa-bg-gold text-slate-900 text-xs font-bold py-2.5 rounded-xl">REQUEST TO HOST</button>
+      </div>
+    </div>
+  );
+
+  /* ---------------- MESSAGES ---------------- */
+  const MessagesView = () => (
+    <div className="p-5 pb-32 max-w-md mx-auto fade-up">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-2xl font-extrabold">Messages</h2>
+          <p className="text-[11px] text-green-400 flex items-center gap-1">🔒 End-to-end encrypted</p>
+        </div>
+        <button onClick={()=>setView('home')} className="text-xs text-slate-400">✕</button>
+      </div>
+      <div className="space-y-2">
+        {THREADS.map(t=>(
+          <button key={t.id} onClick={()=>setThread(t)} className="w-full glass rounded-2xl p-3 flex gap-3 items-center text-left active:scale-[.99]">
+            <div className={`w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold ${t.business?'medusa-bg-gold text-slate-900':'bg-slate-700'}`}>{t.initials}</div>
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between">
+                <p className="text-sm font-semibold truncate">{t.name}</p>
+                <span className="text-[9px] text-slate-500">{t.time}</span>
+              </div>
+              <p className="text-[10px] text-slate-400 truncate">{t.last}</p>
+            </div>
+            {t.unread>0 && <span className="w-5 h-5 rounded-full medusa-bg-gold text-slate-900 text-[10px] font-bold flex items-center justify-center">{t.unread}</span>}
+          </button>
+        ))}
+      </div>
+      <p className="text-center text-[9px] text-slate-600 mt-4">Messages use Signal-style E2E encryption in production.</p>
+    </div>
+  );
+
+  const ChatView = () => (
+    <div className="flex flex-col h-screen max-w-md mx-auto">
+      <div className="glass px-4 py-3 flex items-center gap-3">
+        <button onClick={()=>setThread(null)} className="text-slate-300">‹</button>
+        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-bold ${thread.business?'medusa-bg-gold text-slate-900':'bg-slate-700'}`}>{thread.initials}</div>
+        <div className="flex-1">
+          <p className="text-sm font-bold">{thread.name}</p>
+          <p className="text-[9px] text-green-400">🔒 encrypted</p>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-28">
+        {chat.map((m,i)=>(
+          <div key={i} className={`max-w-[80%] px-3 py-2 rounded-2xl text-[12px] leading-relaxed ${m.from==='me'?'ml-auto medusa-bg-gold text-slate-900':'glass text-slate-200'}`}>{m.text}</div>
+        ))}
+      </div>
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass border-t border-white/10 p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+        <form onSubmit={e=>{e.preventDefault(); if(!chatInput.trim())return; setChat(c=>[...c,{from:'me',text:chatInput}]); setChatInput('');}}
+          className="flex gap-2">
+          <input value={chatInput} onChange={e=>setChatInput(e.target.value)} placeholder="Encrypted message..." className="flex-1 bg-slate-800 rounded-full px-4 py-2.5 text-sm outline-none focus:ring-1 ring-yellow-500/40" />
+          <button className="w-10 h-10 rounded-full medusa-bg-gold text-slate-900 font-bold">↑</button>
+        </form>
+      </div>
+    </div>
+  );
+
+  /* ---------------- MODALS ---------------- */
+  const ScannerModal = () => (
+    <div className="fixed inset-0 z-[95] bg-slate-950/95 flex flex-col max-w-md mx-auto">
+      <div className="flex items-center justify-between p-5">
+        <div>
+          <h3 className="font-bold">Scan to Check In</h3>
+          <p className="text-[10px] text-slate-500">Point at the QR code on your passport or at the counter</p>
+        </div>
+        <button onClick={()=>setScanOpen(false)} className="w-9 h-9 rounded-full glass">✕</button>
+      </div>
+      <div className="flex-1 flex items-center justify-center px-8">
+        <div className="relative w-full aspect-square max-w-[280px] rounded-3xl border-2 border-yellow-500/40 overflow-hidden bg-slate-900">
+          <div className="absolute inset-6 grid grid-cols-2 gap-4 opacity-20">
+            {Array.from({length:4}).map((_,i)=><div key={i} className="border-2 border-yellow-400 rounded-lg"/>)}
+          </div>
+          <div className="absolute left-0 right-0 h-0.5 bg-yellow-400 shadow-[0_0_12px_2px_rgba(212,175,55,.8)] scanline" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-6xl opacity-40">⛶</span>
+          </div>
+          <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-yellow-400 rounded-tl"/>
+          <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-yellow-400 rounded-tr"/>
+          <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-yellow-400 rounded-bl"/>
+          <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-yellow-400 rounded-br"/>
+        </div>
+      </div>
+      <div className="p-5 pb-8">
+        <p className="text-center text-[10px] text-slate-500 mb-3">DEMO MODE · simulated scan</p>
+        <button onClick={()=>checkIn(LOCATIONS[0])} className="w-full medusa-bg-gold text-slate-900 font-bold py-3.5 rounded-xl active:scale-95 transition">
+          Simulate Check-In · Medusa Farms
+        </button>
+        <p className="text-center text-[10px] text-slate-600 mt-3">Real app uses camera + signed QR codes to prevent fraud.</p>
+      </div>
+    </div>
+  );
+
+  const LocationSheet = () => {
+    const l = locOpen; if (!l) return null;
+    return (
+      <Sheet open={!!l} onClose={()=>setLocOpen(null)} title={l.name}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center overflow-hidden">
+            {l.logo ? <img src={l.logo} className="w-14 h-14 object-contain" alt="" onError={e=>{e.currentTarget.style.display='none'}}/> : <span className="text-2xl">{l.emoji}</span>}
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-slate-400">{l.city}</p>
+            <div className="flex gap-1 mt-1">
+              {l.open ? <Pill className="bg-green-500/20 text-green-400">Open Now</Pill> : <Pill className="bg-slate-600/30 text-slate-400">Closed</Pill>}
+              {l.dutchie && <Pill className="bg-purple-500/20 text-purple-300">Dutchie</Pill>}
+              {l.delivery && <Pill className="bg-blue-500/20 text-blue-300">Delivery</Pill>}
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-xs medusa-gold font-bold">{l.dist} mi</p>
+            <p className="text-[9px] text-slate-500">away</p>
+          </div>
+        </div>
+
+        <div className="space-y-2 text-[12px] text-slate-300 mb-4">
+          {l.address && <p>📍 {l.address}</p>}
+          {l.phone && <p>📞 {l.phone}</p>}
+          {l.hours && <p>🕗 {l.hours}</p>}
+          {l.id==='medusa' && <p>🌐 medusafarms.com</p>}
+        </div>
+
+        <div className="bg-slate-800/60 rounded-xl p-3 mb-4">
+          <p className="text-[10px] uppercase tracking-widest medusa-gold font-bold mb-1">Passport Perk</p>
+          <p className="text-[12px]">{l.perk}</p>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Current Specials</p>
+          <ul className="space-y-1">
+            {l.specials.map(s=><li key={s} className="text-[12px] text-slate-300 flex gap-2"><span className="medusa-gold">•</span>{s}</li>)}
+          </ul>
+        </div>
+
+        <div className="flex gap-2">
+          <button onClick={()=>checkIn(l)} className="flex-1 medusa-bg-gold text-slate-900 text-sm font-bold py-3 rounded-xl">
+            {stamps.includes(l.id) ? 'Check In Again' : 'Check In'}
+          </button>
+          {l.dutchie && <button onClick={()=>{setLocOpen(null);setOrderOpen(true);}} className="flex-1 bg-slate-800 text-sm font-bold py-3 rounded-xl">Order</button>}
+        </div>
+      </Sheet>
+    );
+  };
+
+  const OrderSheet = () => {
+    const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+    const [routing, setRouting] = useState(false);
+    const [routed, setRouted] = useState(false);
+    useEffect(() => { if(!orderOpen){ setRouting(false); setRouted(false); } }, [orderOpen]);
+    const route = () => {
+      setRouting(true);
+      setTimeout(()=>{ setRouting(false); setRouted(true); }, 1400);
+    };
+    return (
+      <Sheet open={orderOpen} onClose={()=>setOrderOpen(false)} title="Order · Medusa Farms">
+        <div className="flex items-center gap-2 mb-3">
+          <Pill className="bg-green-500/20 text-green-400">Powered by Dutchie</Pill>
+          <Pill className="bg-blue-500/20 text-blue-300">Delivery available</Pill>
+        </div>
+
+        {!routed ? (
+          <>
+            <div className="space-y-2 mb-4">
+              {MENU.map(m=>(
+                <div key={m.id} className="bg-slate-800/50 rounded-xl p-2.5 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-lg">{m.emoji}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-semibold truncate">{m.name} {m.locked && '🔒'}</p>
+                    <p className="text-[9px] text-slate-500">{m.size} · THC {m.thc}</p>
+                  </div>
+                  <p className="text-[12px] font-bold medusa-gold">${m.price}</p>
+                  <button onClick={()=>addToCart(m)} className="w-7 h-7 rounded-full medusa-bg-gold text-slate-900 font-bold text-sm">+</button>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-slate-800/40 rounded-xl p-3 mb-3">
+              <div className="flex justify-between text-[12px] mb-1"><span className="text-slate-400">Items</span><span>{cart.reduce((s,i)=>s+i.qty,0)}</span></div>
+              <div className="flex justify-between text-[12px] mb-1"><span className="text-slate-400">Subtotal</span><span>${total.toFixed(2)}</span></div>
+              <div className="flex justify-between text-[12px] mb-1"><span className="text-slate-400">Est. tax</span><span>${(total*0.081).toFixed(2)}</span></div>
+              <div className="flex justify-between text-sm font-bold pt-2 border-t border-white/10 mt-2"><span>Total</span><span className="medusa-gold">${(total*1.081).toFixed(2)}</span></div>
+            </div>
+
+            <button onClick={route} disabled={!cart.length} className={`w-full font-bold py-3 rounded-xl ${cart.length?'medusa-bg-gold text-slate-900':'bg-slate-800 text-slate-500'}`}>
+              {routing ? 'Routing…' : 'Route to Closest Location'}
+            </button>
+            {routing && <div className="mt-3 h-1 rounded-full shimmer" />}
+            <p className="text-[9px] text-slate-500 text-center mt-2">Routes by distance + live Dutchie inventory</p>
+          </>
+        ) : (
+          <div className="text-center py-4">
+            <div className="text-4xl mb-2">✅</div>
+            <p className="font-bold">Order routed</p>
+            <p className="text-[11px] text-slate-400 mb-4">Closest location with full inventory</p>
+            <div className="bg-slate-800/50 rounded-xl p-3 text-left mb-3">
+              <p className="text-sm font-bold">Medusa Farms</p>
+              <p className="text-[10px] text-slate-400">0.8 mi · Kingman, AZ</p>
+              <p className="text-[10px] text-slate-400">Ready in ~15 min · Delivery ETA 35 min</p>
+              <p className="text-[10px] text-green-400 mt-1">All {cart.reduce((s,i)=>s+i.qty,0)} items in stock</p>
+            </div>
+            <button onClick={()=>{setOrderOpen(false);setCart([]);notify('Order sent to Dutchie','Medusa Farms will confirm shortly','🛒');}} className="w-full medusa-bg-gold text-slate-900 font-bold py-3 rounded-xl">Send Order to Dutchie</button>
+          </div>
+        )}
+      </Sheet>
+    );
+  };
+
+  const LiveModal = () => liveOpen ? (
+    <div className="fixed inset-0 z-[95] bg-black/95 flex flex-col max-w-md mx-auto">
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1 text-[10px] font-bold text-rose-400"><span className="w-2 h-2 rounded-full bg-rose-500 live-dot"/>LIVE</span>
+          <span className="text-[10px] text-slate-500">{liveOpen.when}</span>
+        </div>
+        <button onClick={()=>setLiveOpen(null)} className="w-9 h-9 rounded-full glass">✕</button>
+      </div>
+      <div className="flex-1 relative bg-gradient-to-br from-purple-900/60 via-slate-900 to-amber-900/30 m-4 rounded-3xl overflow-hidden flex items-center justify-center">
+        <div className="text-center px-6">
+          <div className="text-6xl mb-3">{liveOpen.emoji}</div>
+          <p className="font-bold">{liveOpen.title}</p>
+          <p className="text-[11px] text-slate-400">{liveOpen.host}</p>
+          <p className="text-[10px] text-slate-500 mt-4">Simulated live stream · WebRTC in production</p>
+        </div>
+        <div className="absolute bottom-3 left-3 right-3 flex gap-2">
+          <div className="flex-1 glass rounded-full px-3 py-2 text-[10px] text-slate-400">Say something…</div>
+          <button onClick={()=>notify('Reaction sent','🔥 sent to the stream','🔥')} className="w-9 h-9 rounded-full medusa-bg-gold text-slate-900">🔥</button>
+        </div>
+      </div>
+      <div className="px-4 pb-6">
+        <button onClick={()=>{setLiveOpen(null);notify('Event drop unlocked','Exclusive event offer added to wallet','🎁');}} className="w-full medusa-bg-gold text-slate-900 font-bold py-3 rounded-xl">Unlock Event Drop</button>
+      </div>
+    </div>
+  ) : null;
+
+  /* ---------------- RENDER ---------------- */
+  return (
+    <div className="min-h-screen bg-slate-950">
+      <div className="mx-auto max-w-md min-h-screen bg-slate-950 relative overflow-hidden">
+        {view === 'home' && <Home />}
+        {view === 'map' && <MapView />}
+        {view === 'passport' && <PassportView />}
+        {view === 'social' && <SocialView />}
+        {view === 'rewards' && <RewardsView />}
+        {view === 'events' && <EventsView />}
+        {view === 'messages' && <MessagesView />}
+        {view === 'profile' && <ProfileView />}
+
+        {thread ? <ChatView /> : <Nav />}
+
+        <Toast toast={toast} />
+        {scanOpen && <ScannerModal />}
+        <LocationSheet />
+        <OrderSheet />
+        <LiveModal />
+      </div>
+      <p className="hidden md:block text-center text-[10px] text-slate-700 py-6">
+        Arizona Super Highways — interactive prototype · demo model: Medusa Farms, Kingman AZ · 21+
+      </p>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
